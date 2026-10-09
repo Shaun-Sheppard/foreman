@@ -47,6 +47,8 @@ const KNOWN_STATES = ['New', 'Approved', 'Committed', 'Active', 'To Do', 'In Pro
     .rnote { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); margin-top: -2px; }
     .rnote.bad { color: var(--fail); }
     .rnote.warn { color: var(--att); }
+    .prep { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .prep label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--text3); }
     .rempty { padding: 14px 12px; color: var(--text3); }
     .dashed { height: 28px; padding: 0 10px; border: 1px dashed var(--border2); border-radius: 6px; background: transparent; color: var(--text2); }
     .dashed:hover:not(:disabled) { background: var(--hover); }
@@ -172,7 +174,7 @@ const KNOWN_STATES = ['New', 'Approved', 'Committed', 'Active', 'To Do', 'In Pro
           </section>
 
           <section data-sec="repos">
-            <div><div class="h">Repositories</div><div class="sub">Where sessions run for each project. New work starts from the default branch unless you pick another when starting a session, for example a release branch.</div></div>
+            <div><div class="h">Repositories</div><div class="sub">Where sessions run for each project. Each item gets its own worktree from the default branch (or another you pick when starting), with your local config copied in and the setup command run, so it can build and run like your main checkout.</div></div>
             <div class="repos">
               <div class="rhead caps"><span>Project</span><span>Area path (optional)</span><span>Local repo path</span><span>Default branch</span><span></span></div>
               @for (r of s.repositories; track $index; let i = $index) {
@@ -187,13 +189,27 @@ const KNOWN_STATES = ['New', 'Approved', 'Committed', 'Active', 'To Do', 'In Pro
                     <input class="field mono" placeholder="/path/to/repo" spellcheck="false" aria-label="Local repo path" [value]="r.repoPath" (change)="editRepo(i, { repoPath: $any($event.target).value })" />
                     <button class="btn sm" style="height:28px" (click)="browse(i)">Browse…</button>
                   </div>
-                  <input class="field mono" placeholder="dev" spellcheck="false" aria-label="Default branch" [attr.list]="'branches-' + i" [value]="r.defaultBranch" (change)="editRepo(i, { defaultBranch: $any($event.target).value })" />
-                  <datalist [id]="'branches-' + i">
-                    @for (b of repoInfo()[r.repoPath]?.info?.branches ?? []; track b) {
-                      <option [value]="b"></option>
-                    }
-                  </datalist>
+                  @if (repoInfo()[r.repoPath]?.info?.branches; as branches) {
+                    <select class="field mono" aria-label="Default branch" (change)="editRepo(i, { defaultBranch: $any($event.target).value })">
+                      @if (!branches.includes(r.defaultBranch)) {
+                        <option value="" selected>{{ r.defaultBranch ? r.defaultBranch + ' (missing)' : 'Choose a branch…' }}</option>
+                      }
+                      @for (b of branches; track b) {
+                        <option [value]="b" [selected]="b === r.defaultBranch">{{ b }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <select class="field mono" aria-label="Default branch" disabled><option>{{ r.repoPath ? 'Reading branches…' : 'Choose the repo first' }}</option></select>
+                  }
                   <button class="x" [attr.aria-label]="'Remove mapping ' + (i + 1)" (click)="removeRepo(i)">×</button>
+                  <div class="prep">
+                    <label>Copy into new worktrees
+                      <input class="field mono" spellcheck="false" placeholder=".env, **/appsettings.Development.json" [value]="r.copyFiles.join(', ')" (change)="editRepoFiles(i, $any($event.target).value)" />
+                    </label>
+                    <label>Setup command
+                      <input class="field mono" spellcheck="false" placeholder="dotnet restore && npm ci" [value]="r.setupCommand" (change)="editRepo(i, { setupCommand: $any($event.target).value })" />
+                    </label>
+                  </div>
                   @if (repoNote(r); as note) {
                     <div class="rnote" [class.bad]="note.tone === 'bad'" [class.warn]="note.tone === 'warn'">
                       <fm-status-icon [status]="note.tone === 'bad' ? 'failed' : note.tone === 'warn' ? 'needs_input' : 'done'" [size]="12" />{{ note.text }}
@@ -461,7 +477,7 @@ export class SettingsView {
     const s = this.s();
     if (!s) return;
     const unmapped = s.projects.find((p) => !s.repositories.some((r) => r.project === p));
-    const row: RepoMapping = { project: unmapped ?? s.projects[0], areaPath: '', repoPath: '', defaultBranch: '' };
+    const row: RepoMapping = { project: unmapped ?? s.projects[0], areaPath: '', repoPath: '', defaultBranch: '', copyFiles: [], setupCommand: '' };
     void this.patch({ repositories: [...s.repositories, row] });
   }
 
@@ -470,7 +486,13 @@ export class SettingsView {
     if (s) void this.patch({ repositories: s.repositories.filter((_, i) => i !== index) });
   }
 
-  protected editRepo(index: number, change: Partial<RepoMapping>): void {
+  protected editRepoFiles(index: number, raw: string): void {
+    const s = this.s();
+    const copyFiles = raw.split(',').map((f) => f.trim()).filter(Boolean);
+    if (s) void this.patch({ repositories: s.repositories.map((r, i) => (i === index ? { ...r, copyFiles } : r)) });
+  }
+
+  protected editRepo(index: number, change: Partial<Omit<RepoMapping, 'copyFiles'>>): void {
     const s = this.s();
     if (!s) return;
     const trimmed = Object.fromEntries(Object.entries(change).map(([k, v]) => [k, v.trim()]));

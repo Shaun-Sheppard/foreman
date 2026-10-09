@@ -8,8 +8,8 @@ import { Status } from './icons';
 export type GroupKey = 'attention' | 'active' | 'todo' | 'done';
 export type ChipKey = 'attention' | 'running' | 'pr' | 'done';
 export type ItemStatus =
-  | 'not_started' | 'queued' | 'running' | 'needs_input' | 'finished' | 'failed' | 'interrupted' | 'cancelled'
-  | 'pr_checks' | 'pr_failed' | 'no_pr' | 'fixing' | 'ready' | 'stuck' | 'merged';
+  | 'not_started' | 'queued' | 'running' | 'needs_input' | 'idle' | 'failed' | 'interrupted' | 'cancelled'
+  | 'pr_checks' | 'pr_failed' | 'fixing' | 'ready' | 'stuck' | 'merged';
 
 interface StatusInfo {
   label: string;
@@ -26,12 +26,11 @@ const STATUS: Record<ItemStatus, StatusInfo> = {
   needs_input: { label: 'Needs input', icon: 'needs_input', group: 'attention', tone: 'att' },
   failed: { label: 'Session failed', icon: 'failed', group: 'attention', tone: 'fail' },
   interrupted: { label: 'Interrupted', icon: 'failed', group: 'attention', tone: 'fail' },
-  finished: { label: 'Session finished', icon: 'done', group: 'done', tone: 'pass' },
-  cancelled: { label: 'Cancelled', icon: 'cancelled', group: 'done', tone: 'text3' },
+  idle: { label: 'Your turn', icon: 'needs_input', group: 'attention', tone: 'att' },
+  cancelled: { label: 'Stopped', icon: 'cancelled', group: 'active', tone: 'text2' },
   pr_checks: { label: 'PR checks running', icon: 'pr_checks', group: 'active', tone: 'run' },
   fixing: { label: 'Fixing', icon: 'fixing', group: 'active', tone: 'run' },
   pr_failed: { label: 'PR failed', icon: 'failed', group: 'attention', tone: 'fail' },
-  no_pr: { label: 'No PR raised', icon: 'failed', group: 'attention', tone: 'fail' },
   stuck: { label: 'Stuck', icon: 'stuck', group: 'attention', tone: 'fail' },
   ready: { label: 'Ready to merge', icon: 'ready', group: 'attention', tone: 'pass' },
   merged: { label: 'Merged', icon: 'merged', group: 'done', tone: 'merge' },
@@ -40,7 +39,7 @@ const PR_STATUS: Record<PullRequest['state'], ItemStatus> = {
   checks: 'pr_checks', failed: 'pr_failed', ready: 'ready', stuck: 'stuck', merged: 'merged', abandoned: 'cancelled',
 };
 const SESSION_STATUS: Record<Session['state'], ItemStatus> = {
-  queued: 'queued', running: 'running', needs_input: 'needs_input', done: 'finished',
+  queued: 'queued', running: 'running', needs_input: 'needs_input', done: 'idle',
   failed: 'failed', cancelled: 'cancelled', interrupted: 'interrupted',
 };
 const GROUP_LABEL: Record<GroupKey, string> = {
@@ -48,8 +47,8 @@ const GROUP_LABEL: Record<GroupKey, string> = {
 };
 /** Most urgent first within a group. */
 const RANK: Record<ItemStatus, number> = {
-  needs_input: 0, pr_failed: 1, no_pr: 1, failed: 2, interrupted: 2, stuck: 3, ready: 4,
-  running: 0, fixing: 1, pr_checks: 2, queued: 3, not_started: 0, merged: 0, finished: 1, cancelled: 2,
+  needs_input: 0, pr_failed: 1, failed: 2, interrupted: 2, stuck: 3, ready: 4, idle: 5,
+  running: 0, fixing: 1, pr_checks: 2, queued: 3, cancelled: 4, not_started: 0, merged: 0,
 };
 const RUNNING: ItemStatus[] = ['running', 'needs_input', 'fixing'];
 const PR_OPEN: ItemStatus[] = ['pr_checks', 'pr_failed', 'fixing', 'ready', 'stuck'];
@@ -100,14 +99,14 @@ export function elapsed(fromIso: string | null, to: number): string {
   return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(s).padStart(2, '0');
 }
 
-function statusFor(s: Session | null, pr: PullRequest | null, missing: boolean): ItemStatus {
+function statusFor(s: Session | null, pr: PullRequest | null): ItemStatus {
   if (!s) return 'not_started';
   if (s.state === 'queued' || s.state === 'needs_input') return SESSION_STATUS[s.state];
-  if (s.state === 'running') return s.mode === 'fix' ? 'fixing' : 'running';
+  if (s.state === 'running') return s.turn === 'fix' ? 'fixing' : 'running';
   // A session that broke needs attention before the PR's own state matters.
   if (s.state === 'failed' || s.state === 'interrupted') return SESSION_STATUS[s.state];
-  if (pr) return PR_STATUS[pr.state];
-  if (s.state === 'done' && s.mode !== 'review') return missing ? 'no_pr' : 'pr_checks';
+  // Once there is a PR, its state is what matters between turns.
+  if (pr && pr.state !== 'abandoned') return PR_STATUS[pr.state];
   return SESSION_STATUS[s.state];
 }
 
@@ -118,10 +117,11 @@ function reasonFor(status: ItemStatus, s: Session | null, pr: PullRequest | null
     case 'failed':
     case 'interrupted': return (s.error ?? '').split('\n')[0];
     case 'queued': return s.queuePosition ? `Position ${s.queuePosition} in queue` : '';
-    case 'running': return s.steps.find((x) => x.state === 'in_progress')?.text ?? 'Starting…';
+    case 'running': return (s.turn === 'start' && s.steps.find((x) => x.state === 'in_progress')?.text) || 'Working…';
     case 'fixing': return pr ? `Fix attempt ${pr.fixAttempts} of ${pr.maxAttempts}` : 'Raising the pull request';
     case 'pr_failed': return pr?.failSummary ?? '';
-    case 'no_pr': return 'The session finished without opening a PR';
+    case 'idle': return 'Claude has finished its turn';
+    case 'cancelled': return 'Stopped — send a message to carry on';
     case 'stuck': return pr ? `${pr.fixAttempts} of ${pr.maxAttempts} fix attempts used` : '';
     case 'ready': return 'All checks passed';
     case 'pr_checks': {
@@ -182,7 +182,7 @@ export class Store {
     this.items().map((item) => {
       const session = this.latestSession().get(item.id) ?? null;
       const pr = (session && [...this.prs().prs].reverse().find((p) => p.workItemId === item.id && p.branch === session.branch)) || null;
-      const status = statusFor(session, pr, this.prs().missing.includes(item.id));
+      const status = statusFor(session, pr);
       const steps = session?.steps ?? [];
       return {
         item, status, session, pr, ...STATUS[status],
@@ -301,8 +301,8 @@ export class Store {
         this.announce({ status: 'needs_input', title: `${s.workItemId} needs input`, text: s.pending?.title ?? title, itemId: s.workItemId });
       } else if (s.state === 'failed' || s.state === 'interrupted') {
         this.announce({ status: 'failed', title: `${s.workItemId} session failed`, text: title, itemId: s.workItemId });
-      } else if (s.state === 'done' && s.mode === 'review') {
-        this.announce({ status: 'done', title: `${s.workItemId} session finished`, text: title, itemId: s.workItemId });
+      } else if (s.state === 'done') {
+        this.announce({ status: 'needs_input', title: `${s.workItemId} — your turn`, text: title, itemId: s.workItemId });
       }
     }
   }
@@ -310,7 +310,6 @@ export class Store {
   /** Applies a PR update, announcing PRs that newly failed, got stuck or became ready. */
   private applyPrs(next: PrSnapshot): void {
     const before = new Map(this.prs().prs.map((p) => [p.id, p.state]));
-    const wasMissing = this.prs().missing;
     this.prs.set(next);
     const busy = (id: number) => this.sessions().some((s) => s.workItemId === id && ['queued', 'running', 'needs_input'].includes(s.state));
     for (const p of next.prs) {
@@ -320,9 +319,6 @@ export class Store {
       else if (p.state === 'stuck') this.announce({ status: 'stuck', title: `${id} is stuck`, text: p.failSummary, itemId: id });
       else if (p.state === 'ready') this.announce({ status: 'ready', title: `${id} ready to merge`, text: p.title, itemId: id });
       else if (p.state === 'merged') this.announce({ status: 'merged', title: `${id} merged`, text: p.title, itemId: id });
-    }
-    for (const id of next.missing) {
-      if (!wasMissing.includes(id)) this.announce({ status: 'failed', title: `${id} raised no PR`, text: 'The session finished without opening one', itemId: id });
     }
   }
 

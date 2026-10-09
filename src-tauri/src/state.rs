@@ -58,7 +58,7 @@ pub struct AppState {
 
 impl AppState {
     pub fn settings(&self) -> Settings {
-        self.db.get(KEY_SETTINGS).unwrap_or_default()
+        self.db.get::<Settings>(KEY_SETTINGS).unwrap_or_default().normalised()
     }
 
     pub fn filters(&self) -> Filters {

@@ -32,6 +32,7 @@ import { Store } from './store';
     .chev { width: 10px; font-size: 9px; color: var(--text3); }
     .preview { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 6px; }
     textarea { width: 100%; font-family: var(--mono); font-size: 12px; line-height: 1.6; background: var(--code); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; resize: vertical; outline: none; user-select: text; -webkit-user-select: text; }
+    .notebox { max-width: 760px; font-family: var(--sans); font-size: 13px; line-height: 1.5; background: var(--input); border-color: var(--border2); }
     .nomap { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--att); border-radius: 8px; background: var(--att-bg); max-width: 760px; }
     .nomap div { flex: 1; display: flex; flex-direction: column; gap: 2px; }
     .nomap span { font-size: 12.5px; color: var(--text2); }
@@ -42,7 +43,7 @@ import { Store } from './store';
         <fm-status-icon status="needs_input" [size]="18" />
         <div>
           <b style="font-weight:600">No repository mapped for {{ item().project }}</b>
-          <span>Sessions run in a worktree of a local clone. Map this project to one, with its default branch.</span>
+          <span>Sessions run in a worktree of a local clone. Map this project to one, with its default branch and local config.</span>
         </div>
         <button class="btn primary" data-primary (click)="store.openSettings('repos')">Map repository</button>
       </div>
@@ -68,12 +69,18 @@ import { Store } from './store';
           </select>
         </label>
         <label><span>Base branch</span>
-          <input class="field mono" spellcheck="false" list="launch-branches" placeholder="dev" [value]="branch()" (input)="branch.set($any($event.target).value.trim())" />
-          <datalist id="launch-branches">
-            @for (b of repo()?.branches ?? []; track b) {
-              <option [value]="b"></option>
-            }
-          </datalist>
+          @if (repo()?.branches; as branches) {
+            <select class="field mono" (change)="branch.set($any($event.target).value)">
+              @if (!branches.includes(branch())) {
+                <option value="" selected>Choose a branch…</option>
+              }
+              @for (b of branches; track b) {
+                <option [value]="b" [selected]="b === branch()">{{ b }}</option>
+              }
+            </select>
+          } @else {
+            <select class="field mono" disabled><option>{{ branch() || 'Reading branches…' }}</option></select>
+          }
         </label>
         <label><span>Model</span>
           <select class="field" (change)="model.set($any($event.target).value)">
@@ -88,6 +95,8 @@ import { Store } from './store';
       } @else {
         <span class="hint mono">New branch {{ newBranch() }} from {{ branch() }}</span>
       }
+
+      <textarea class="notebox" rows="2" placeholder="Anything to add before Claude starts? (optional)" [value]="note()" (input)="note.set($any($event.target).value)"></textarea>
 
       <div class="card">
         <button class="toggle" [attr.aria-expanded]="promptOpen()" (click)="promptOpen.set(!promptOpen())">
@@ -125,6 +134,7 @@ export class Launcher {
   /** Non-null once the user has edited the preview for this launch. */
   protected readonly edited = signal<string | null>(null);
   protected readonly starting = signal(false);
+  protected readonly note = signal('');
 
   /** Mappings for this item's project, most specific area path first. */
   protected readonly mappings = computed<RepoMapping[]>(() => {
@@ -144,7 +154,8 @@ export class Launcher {
   protected readonly branchProblem = computed(() => {
     if (!this.branch()) return 'Choose the branch to start from.';
     const branches = this.repo()?.branches;
-    return branches && !branches.includes(this.branch()) ? `Branch "${this.branch()}" doesn't exist in this repository.` : null;
+    if (!branches) return 'Reading the repository\'s branches…';
+    return !branches.includes(this.branch()) ? `Branch "${this.branch()}" doesn't exist in this repository. Choose another.` : null;
   });
   protected readonly canStart = computed(() => !!this.repoPath() && !this.branchProblem());
 
@@ -160,6 +171,7 @@ export class Launcher {
       this.item().id;
       untracked(() => {
         this.edited.set(null);
+        this.note.set('');
         this.pickRepo(first?.repoPath ?? '');
       });
     });
@@ -204,6 +216,7 @@ export class Launcher {
         baseBranch: this.branch(),
         model: this.model(),
         prompt: this.edited(),
+        note: this.note().trim() || null,
       }),
     );
     this.starting.set(false);

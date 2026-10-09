@@ -96,10 +96,10 @@ fn ref_exists(repo: &Path, name: &str) -> bool {
 
 /// Creates the session's worktree and branch from `base`. Safe to retry: an existing
 /// worktree or branch is reused rather than recreated (NFR2).
-pub fn ensure_worktree(repo: &str, worktree: &Path, branch: &str, base: &str) -> Result<(), String> {
+pub fn ensure_worktree(repo: &str, worktree: &Path, branch: &str, base: &str) -> Result<bool, String> {
     let repo = Path::new(repo);
     if worktree.is_dir() && git(worktree, &["rev-parse", "--is-inside-work-tree"]).as_deref() == Ok("true") {
-        return Ok(());
+        return Ok(false);
     }
     if let Some(parent) = worktree.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("Couldn't create the worktree folder: {e}"))?;
@@ -108,7 +108,7 @@ pub fn ensure_worktree(repo: &str, worktree: &Path, branch: &str, base: &str) ->
     let _ = git(repo, &["worktree", "prune"]);
     if ref_exists(repo, &format!("refs/heads/{branch}")) {
         git(repo, &["worktree", "add", &path, branch]).map_err(|e| format!("Couldn't create the worktree: {e}"))?;
-        return Ok(());
+        return Ok(true);
     }
     // Start from the freshest copy of the base branch we can get.
     let _ = git(repo, &["fetch", "--quiet", "origin", base]);
@@ -121,7 +121,90 @@ pub fn ensure_worktree(repo: &str, worktree: &Path, branch: &str, base: &str) ->
     };
     git(repo, &["worktree", "add", "--no-track", "-b", branch, &path, &start])
         .map_err(|e| format!("Couldn't create the worktree: {e}"))?;
-    Ok(())
+    Ok(true)
+}
+
+const SKIP_DIRS: [&str; 6] = [".git", "node_modules", "bin", "obj", "dist", "target"];
+const MAX_WALK_DEPTH: usize = 8;
+
+fn walk(dir: &Path, depth: usize, name: &str, found: &mut Vec<std::path::PathBuf>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        let file_name = entry.file_name();
+        if path.is_dir() {
+            if depth < MAX_WALK_DEPTH && !SKIP_DIRS.contains(&file_name.to_string_lossy().as_ref()) {
+                walk(&path, depth + 1, name, found);
+            }
+        } else if file_name.to_string_lossy() == name {
+            found.push(path);
+        }
+    }
+}
+
+/// Copies local, untracked config from the main checkout into a new worktree so a session
+/// starts with the same settings you work with. A pattern is a path relative to the repo
+/// root, or `**/name` to match that file name in any folder. Existing files are never overwritten.
+pub fn copy_local_files(repo: &str, worktree: &Path, patterns: &[String]) -> Vec<String> {
+    let repo = Path::new(repo);
+    let mut copied = vec![];
+    for pattern in patterns {
+        let pattern = pattern.replace('\\', "/");
+        let mut sources = vec![];
+        if let Some(name) = pattern.strip_prefix("**/") {
+            walk(repo, 0, name, &mut sources);
+        } else if !Path::new(&pattern).is_absolute() && !pattern.split('/').any(|part| part == "..") {
+            let direct = repo.join(&pattern);
+            if direct.is_file() {
+                sources.push(direct);
+            }
+        }
+        for source in sources {
+            let Ok(relative) = source.strip_prefix(repo) else {
+                continue;
+            };
+            let target = worktree.join(relative);
+            if target.exists() {
+                continue;
+            }
+            if let Some(parent) = target.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            if std::fs::copy(&source, &target).is_ok() {
+                copied.push(relative.to_string_lossy().into_owned());
+            }
+        }
+    }
+    copied
+}
+
+/// Runs the repo's setup command (restore, install…) in a new worktree. Returns the tail of its output.
+pub fn run_setup(worktree: &Path, command: &str, path_env: &str) -> Result<String, String> {
+    let mut shell = if cfg!(windows) {
+        let mut c = Command::new("cmd");
+        c.args(["/C", command]);
+        c
+    } else {
+        let mut c = Command::new("sh");
+        c.args(["-c", command]);
+        c
+    };
+    hide_window(&mut shell);
+    let out = shell
+        .current_dir(worktree)
+        .env("PATH", path_env)
+        .output()
+        .map_err(|e| format!("Couldn't run the setup command: {e}"))?;
+    let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+    let lines: Vec<&str> = text.lines().collect();
+    let tail = lines[lines.len().saturating_sub(15)..].join("\n");
+    if out.status.success() {
+        Ok(tail)
+    } else {
+        Err(format!("Setup command failed ({}):\n{tail}", out.status))
+    }
 }
 
 /// After a merge: remove the session's worktree and its local branch (FR6.2). A worktree
@@ -178,9 +261,25 @@ mod tests {
         let wt = worktree_path(repo_str, "", 9);
 
         assert!(ensure_worktree(repo_str, &wt, "foreman/9-x", "nope").is_err());
-        ensure_worktree(repo_str, &wt, "foreman/9-x", "releases/1.33").unwrap();
-        ensure_worktree(repo_str, &wt, "foreman/9-x", "releases/1.33").unwrap();
+        assert!(ensure_worktree(repo_str, &wt, "foreman/9-x", "releases/1.33").unwrap());
+        assert!(!ensure_worktree(repo_str, &wt, "foreman/9-x", "releases/1.33").unwrap());
         assert_eq!(git(&wt, &["branch", "--show-current"]).unwrap(), "foreman/9-x");
+
+        // Local config is copied in; existing files are left alone; paths can't escape the repo.
+        std::fs::create_dir_all(repo.join("src/Api")).unwrap();
+        std::fs::write(repo.join(".env"), "A=1").unwrap();
+        std::fs::write(repo.join("src/Api/appsettings.Development.json"), "{}").unwrap();
+        std::fs::create_dir_all(repo.join("node_modules/x")).unwrap();
+        std::fs::write(repo.join("node_modules/x/appsettings.Development.json"), "{}").unwrap();
+        let patterns = [".env".to_string(), "**/appsettings.Development.json".to_string(), "../outside".to_string()];
+        let mut copied = copy_local_files(repo_str, &wt, &patterns);
+        copied.sort();
+        assert_eq!(copied, vec![".env", "src/Api/appsettings.Development.json"]);
+        assert!(copy_local_files(repo_str, &wt, &patterns).is_empty());
+        assert_eq!(run_setup(&wt, "echo ready", &std::env::var("PATH").unwrap_or_default()).unwrap(), "ready");
+        assert!(run_setup(&wt, "exit 3", "").is_err());
+        std::fs::remove_file(wt.join(".env")).unwrap();
+        std::fs::remove_dir_all(wt.join("src")).unwrap();
 
         // Clean-up refuses a dirty worktree, then removes a clean one along with its branch.
         std::fs::write(wt.join("scratch.txt"), "x").unwrap();

@@ -23,5 +23,6 @@ keyring = { version = "3", features = ["apple-native", "windows-native"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 thiserror = "2"
 open = "5"
+base64 = "0.22"
 tauri-plugin-notification = "2"
 rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "tokio"] }

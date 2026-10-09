@@ -34,7 +34,9 @@ const PORT_BLOCK_SIZE: u32 = 10;
 const STOP_GRACE: Duration = Duration::from_secs(5);
 const LOG_TAIL: usize = 1000;
 const LOG_RETENTION_DAYS: u64 = 30;
-const RESUME_PROMPT: &str = "Foreman was closed while you were working. Continue this task from where you left off.";
+const RESUME_PROMPT: &str = "You were interrupted part-way through. Continue this task from where you left off.";
+const MAX_IMAGES: usize = 10;
+const MAX_IMAGE_BYTES: usize = 8 * 1024 * 1024;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -63,6 +65,11 @@ pub struct Session {
     /// SDK session to resume from: set on fix sessions so they keep the original context (FR5.1).
     #[serde(skip_serializing, default)]
     pub resume_from: Option<String>,
+    /// What the current (or last) turn is: `start`, `chat` or `fix`.
+    pub turn: String,
+    /// JSON list of images attached to the message that started this turn.
+    #[serde(skip_serializing, default)]
+    pub attachments: String,
 }
 
 impl Session {
@@ -329,9 +336,9 @@ pub fn pump(app: &AppHandle) {
 async fn launch(app: AppHandle, mut session: Session, mut rx: mpsc::UnboundedReceiver<String>, kill: Arc<Notify>) {
     let state = app.state::<AppState>();
     let settings = state.settings();
-    // Either picking an interrupted session back up, or a fix continuing from an earlier session.
-    let resuming = session.started_at.is_some() && session.sdk_session_id.is_some();
-    let resume_id = if resuming { session.sdk_session_id.clone() } else { session.resume_from.clone() };
+    // Every turn after the first continues the same conversation.
+    let resume_id = session.sdk_session_id.clone().or(session.resume_from.clone());
+    let resuming = resume_id.is_some();
 
     session.state = RUNNING.into();
     session.started_at.get_or_insert_with(now);
@@ -341,7 +348,9 @@ async fn launch(app: AppHandle, mut session: Session, mut rx: mpsc::UnboundedRec
     session.port_base = free_port_base(&state, &session.id);
     let _ = state.db.save_session(&session);
     emit(&app);
-    log_info(&app, &session.id, "info", if resuming { "Resuming session" } else { "Starting session" });
+    if !resuming {
+        log_info(&app, &session.id, "info", "Starting session");
+    }
 
     // Fixture mode never touches a real repository.
     let cwd = if state.fixture {
@@ -352,8 +361,10 @@ async fn launch(app: AppHandle, mut session: Session, mut rx: mpsc::UnboundedRec
         let made = tauri::async_runtime::spawn_blocking(move || git::ensure_worktree(&repo, &worktree, &branch, &base))
             .await
             .unwrap_or_else(|e| Err(e.to_string()));
-        if let Err(err) = made {
-            return finish(&app, &session.id, FAILED, "error", None, Some(err));
+        match made {
+            Err(err) => return finish(&app, &session.id, FAILED, "error", None, Some(err)),
+            Ok(true) => prepare_worktree(&app, &session, &settings).await,
+            Ok(false) => {}
         }
         PathBuf::from(&session.worktree_path)
     };
@@ -409,7 +420,8 @@ async fn launch(app: AppHandle, mut session: Session, mut rx: mpsc::UnboundedRec
     let start = wire(json!({
         "type": "start",
         "cwd": cwd,
-        "prompt": if resuming { RESUME_PROMPT } else { session.prompt.as_str() },
+        "prompt": session.prompt,
+        "images": serde_json::from_str::<Value>(&session.attachments).unwrap_or_else(|_| json!([])),
         "model": if session.model.is_empty() { Value::Null } else { json!(session.model) },
         "resume": json!(resume_id),
         "allowAllTools": settings.allow_all_tools,
@@ -468,6 +480,39 @@ async fn launch(app: AppHandle, mut session: Session, mut rx: mpsc::UnboundedRec
             let detail = stderr_tail.lock().unwrap().join("\n");
             let msg = if detail.is_empty() { "The agent host stopped unexpectedly".to_string() } else { format!("The agent host stopped unexpectedly:\n{detail}") };
             finish(&app, &session.id, INTERRUPTED, "error", None, Some(msg));
+        }
+    }
+}
+
+/// A new worktree has none of the main checkout's local setup: copy the config files the
+/// repository mapping lists and run its setup command, so the session can build and run.
+async fn prepare_worktree(app: &AppHandle, session: &Session, settings: &crate::settings::Settings) {
+    let Some(mapping) = settings
+        .repositories
+        .iter()
+        .filter(|r| r.repo_path == session.repo_path)
+        .max_by_key(|r| (r.project == session.project, r.area_path.len()))
+        .cloned()
+    else {
+        return;
+    };
+    let (repo, worktree) = (session.repo_path.clone(), PathBuf::from(&session.worktree_path));
+    if !mapping.copy_files.is_empty() {
+        let (wt, patterns) = (worktree.clone(), mapping.copy_files.clone());
+        let copied = tauri::async_runtime::spawn_blocking(move || git::copy_local_files(&repo, &wt, &patterns)).await.unwrap_or_default();
+        let text = if copied.is_empty() { "No local config files matched to copy".to_string() } else { format!("Copied local config: {}", copied.join(", ")) };
+        log_info(app, &session.id, "info", text);
+    }
+    if !mapping.setup_command.is_empty() {
+        log_info(app, &session.id, "info", format!("Running setup: {}", mapping.setup_command));
+        let command = mapping.setup_command.clone();
+        let done = tauri::async_runtime::spawn_blocking(move || git::run_setup(&worktree, &command, login_path()))
+            .await
+            .unwrap_or_else(|e| Err(e.to_string()));
+        match done {
+            Ok(_) => log_info(app, &session.id, "info", "Setup finished"),
+            // Claude can often recover from a failed restore, so the session still starts.
+            Err(err) => log_info(app, &session.id, "error", err),
         }
     }
 }
@@ -586,18 +631,24 @@ fn finish(app: &AppHandle, session_id: &str, next_state: &str, outcome: &str, co
         s.error = error.clone();
         let _ = state.db.save_session(&s);
         let line = match (next_state, &error) {
-            (DONE, _) => "Session finished".to_string(),
-            (CANCELLED, _) => "Session stopped".to_string(),
+            (DONE, _) => String::new(),
+            (CANCELLED, _) => "Stopped".to_string(),
             (_, Some(e)) => e.clone(),
             _ => "Session failed".to_string(),
         };
-        log_info(app, session_id, if next_state == DONE || next_state == CANCELLED { "info" } else { "error" }, line);
+        if !line.is_empty() {
+            log_info(app, session_id, if next_state == CANCELLED { "info" } else { "error" }, line);
+        }
         if matches!(next_state, FAILED | INTERRUPTED) {
             let title = item_title(&state, s.work_item_id);
             notify(app, state.settings().notify.failed, &format!("{} session failed", s.work_item_id), &title);
         }
-        if next_state == DONE && s.mode == "fix" {
-            resolve_review_thread(app, &s);
+        if next_state == DONE {
+            if s.turn == "fix" {
+                resolve_review_thread(app, &s);
+            }
+            let title = item_title(&state, s.work_item_id);
+            notify(app, state.settings().notify.needs_input, &format!("{} — Claude has finished its turn", s.work_item_id), &title);
         }
     }
     emit(app);
@@ -650,8 +701,11 @@ pub fn start(app: &AppHandle, req: StartRequest) -> Result<(), String> {
         port_base: 0,
         project: req.project,
         resume_from: None,
+        turn: "start".into(),
+        attachments: "[]".into(),
     };
     state.db.save_session(&session)?;
+    append_log(app, &session.id, json!({ "kind": "brief", "label": "Brief sent to Claude", "text": session.prompt }));
     state.no_pr.lock().unwrap().remove(&session.work_item_id);
     emit(app);
     pump(app);
@@ -678,27 +732,70 @@ pub fn start_fix(app: &AppHandle, work_item_id: u64) -> Result<(), String> {
         pr.max_attempts = max;
         state.db.save_pull_request(pr)?;
     }
-    let original = mine.iter().find(|s| s.mode != "fix").map(|s| s.prompt.as_str()).unwrap_or_default();
-    let session = Session {
-        id: format!("{}-{:x}", work_item_id, chrono::Utc::now().timestamp_millis()),
-        mode: "fix".into(),
-        sdk_session_id: None,
-        state: QUEUED.into(),
-        started_at: None,
-        ended_at: None,
-        outcome: None,
-        cost_usd: None,
-        prompt: crate::prompt::fix(pr.as_ref(), work_item_id, &last.branch, &last.base_branch, original),
-        error: None,
-        created_at: now(),
-        port_base: 0,
-        resume_from: last.sdk_session_id.clone(),
-        ..last.clone()
-    };
+    // The failure goes into the item's own conversation, so Claude has all its earlier context.
+    let prompt = crate::prompt::fix(pr.as_ref(), work_item_id, &last.branch, &last.base_branch, "");
+    let session = Session { prompt, turn: "fix".into(), attachments: "[]".into(), state: QUEUED.into(), created_at: now(), ..last.clone() };
     state.db.save_session(&session)?;
+    append_log(app, &session.id, json!({ "kind": "brief", "label": "PR failure details sent to Claude", "text": session.prompt }));
     state.no_pr.lock().unwrap().remove(&work_item_id);
     emit(app);
     let _ = app.emit(crate::pr::EVENT_PRS, crate::pr::snapshot(&state));
+    pump(app);
+    Ok(())
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageUpload {
+    pub media_type: String,
+    /// Base64, without a data-URL prefix.
+    pub data: String,
+}
+
+/// Sends the user's next message into an item's conversation, with any pasted images.
+/// The session picks up where it left off, so Claude keeps everything said so far.
+pub fn send_message(app: &AppHandle, session_id: &str, text: &str, images: Vec<ImageUpload>) -> Result<(), String> {
+    use base64::Engine;
+    let state = app.state::<AppState>();
+    let mut s = state.db.session(session_id).ok_or("That session no longer exists")?;
+    if s.is_active() {
+        return Err("Claude is still working. Stop it first, or wait for it to finish.".into());
+    }
+    let text = text.trim();
+    if text.is_empty() && images.is_empty() {
+        return Err("Type a message first".into());
+    }
+    if images.len() > MAX_IMAGES {
+        return Err(format!("Attach at most {MAX_IMAGES} images per message"));
+    }
+    let dir = state.data_dir.join("attachments").join(session_id);
+    let stamp = chrono::Utc::now().timestamp_millis();
+    let mut saved = vec![];
+    for (i, image) in images.iter().enumerate() {
+        let ext = match image.media_type.as_str() {
+            "image/png" => "png",
+            "image/jpeg" => "jpg",
+            "image/gif" => "gif",
+            "image/webp" => "webp",
+            other => return Err(format!("{other} images aren't supported; use PNG, JPEG, GIF or WebP")),
+        };
+        let bytes = base64::engine::general_purpose::STANDARD.decode(&image.data).map_err(|_| "An attached image couldn't be read")?;
+        if bytes.len() > MAX_IMAGE_BYTES {
+            return Err("An attached image is larger than 8 MB".into());
+        }
+        std::fs::create_dir_all(&dir).map_err(|e| format!("Couldn't save the image: {e}"))?;
+        let path = dir.join(format!("{stamp}-{i}.{ext}"));
+        std::fs::write(&path, bytes).map_err(|e| format!("Couldn't save the image: {e}"))?;
+        saved.push(json!({ "mediaType": image.media_type, "path": path }));
+    }
+    s.prompt = if text.is_empty() { "See the attached image.".into() } else { text.to_string() };
+    s.attachments = Value::Array(saved).to_string();
+    s.turn = "chat".into();
+    s.state = QUEUED.into();
+    s.created_at = now();
+    state.db.save_session(&s)?;
+    append_log(app, session_id, json!({ "kind": "user", "text": text, "images": images.len() }));
+    emit(app);
     pump(app);
     Ok(())
 }
@@ -764,6 +861,37 @@ pub fn answer(app: &AppHandle, session_id: &str, request_id: &str, action: &str,
     Ok(())
 }
 
+/// Hands the conversation to the Claude desktop app (`claude --desktop --resume <id>`), e.g. to
+/// use its browser. It is the same session, so Foreman can carry on with it afterwards.
+pub fn open_in_desktop(app: &AppHandle, session_id: &str) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    let s = state.db.session(session_id).ok_or("That session no longer exists")?;
+    if s.is_active() {
+        return Err("Claude is still working here. Stop it or wait for it to finish, then open it in the desktop app.".into());
+    }
+    let id = s.sdk_session_id.ok_or("This session hasn't started a conversation yet")?;
+    let claude = find_claude(&state.settings().claude_path)?;
+    let mut command = std::process::Command::new(claude);
+    git::hide_window(&mut command);
+    let cwd = PathBuf::from(&s.worktree_path);
+    if cwd.is_dir() {
+        command.current_dir(cwd);
+    }
+    let out = command
+        .args(["--desktop", "--resume", &id])
+        .env("PATH", login_path())
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|e| format!("Couldn't run Claude Code: {e}"))?;
+    if out.status.success() {
+        log_info(app, session_id, "info", "Opened in the Claude desktop app");
+        Ok(())
+    } else {
+        let said = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+        Err(format!("Claude Code couldn't open it in the desktop app: {}", said.trim()))
+    }
+}
+
 /// Puts an interrupted, failed or stopped session back in the queue; it resumes by SDK session ID.
 pub fn resume(app: &AppHandle, session_id: &str) -> Result<(), String> {
     let state = app.state::<AppState>();
@@ -776,7 +904,10 @@ pub fn resume(app: &AppHandle, session_id: &str) -> Result<(), String> {
     }
     s.state = QUEUED.into();
     s.created_at = now();
+    s.prompt = RESUME_PROMPT.into();
+    s.attachments = "[]".into();
     state.db.save_session(&s)?;
+    log_info(app, session_id, "info", "Resuming");
     emit(app);
     pump(app);
     Ok(())

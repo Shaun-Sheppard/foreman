@@ -9,7 +9,7 @@ import { Row, Store, ago } from './store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [StatusIcon],
   styles: `
-    :host { display: flex; flex-direction: column; gap: 20px; }
+    :host { display: flex; flex-direction: column; gap: 12px; }
     .prcard { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
     .prcard .l1 { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .prcard .num { font-family: var(--mono); font-weight: 600; }
@@ -23,10 +23,10 @@ import { Row, Store, ago } from './store';
     .panel.pass { border-color: var(--pass); background: var(--pass-bg); }
     .panel.run { border-color: var(--run); background: var(--run-bg); }
     .panel.merge { background: var(--merge-bg); }
-    .panel .body { flex: 1; min-width: 240px; display: flex; flex-direction: column; gap: 3px; }
+    .panel .body { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 3px; }
     .panel .body b { font-weight: 600; font-size: 14px; }
     .panel .body span { font-size: 12.5px; color: var(--text2); text-wrap: pretty; }
-    .act { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .act { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; margin-left: auto; }
     .act .btn { height: 36px; padding: 0 18px; font-size: 13.5px; }
     .act small { font-family: var(--mono); font-size: 11.5px; color: var(--text2); }
     .head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -36,18 +36,17 @@ import { Row, Store, ago } from './store';
     .check { border-top: 1px solid var(--border); }
     .check:first-child { border-top: 0; }
     .crow { display: flex; align-items: center; gap: 10px; padding: 8px 14px; }
-    .crow .cname { width: 160px; flex: none; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .crow .cname { width: 128px; flex: none; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crow .res { flex: 1; min-width: 0; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .crow .res.failed { color: var(--fail); }
     .more { height: 24px; padding: 0 8px; border: 1px solid var(--border); border-radius: 5px; background: transparent; font-size: 12px; color: var(--text2); }
     .more:hover { background: var(--hover); }
-    .detail { padding: 0 14px 12px 39px; display: flex; flex-direction: column; gap: 6px; }
+    .detail { padding: 0 12px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
     .log { font-family: var(--mono); font-size: 12px; line-height: 1.6; background: var(--code); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; white-space: pre; overflow: auto; max-height: 300px; user-select: text; -webkit-user-select: text; }
     .log .err { color: var(--fail); }
     .issue { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); }
     .issue .loc { font-family: var(--mono); font-size: 12px; color: var(--text2); }
     .issue .txt { text-wrap: pretty; line-height: 1.5; user-select: text; -webkit-user-select: text; }
-    @media (max-width: 1100px) { .crow .cname { width: 130px; } }
   `,
   template: `
     @let r = row();
@@ -66,18 +65,11 @@ import { Row, Store, ago } from './store';
       @case ('pr_failed') {
         <div class="panel fail">
           <fm-status-icon status="failed" [size]="20" />
-          <div class="body"><b>PR failed</b><span>{{ r.pr?.failSummary }}. Fix it resumes the session with the details below.</span></div>
+          <div class="body"><b>PR failed</b><span>{{ r.pr?.failSummary }}. Fix it sends the details below into this item's conversation.</span></div>
           <div class="act">
             <button class="btn primary" data-primary [disabled]="busy()" (click)="fix()">Fix it</button>
             <small>Attempt {{ (r.pr?.fixAttempts ?? 0) + 1 }} of {{ r.pr?.maxAttempts }}</small>
           </div>
-        </div>
-      }
-      @case ('no_pr') {
-        <div class="panel fail">
-          <fm-status-icon status="failed" [size]="20" />
-          <div class="body"><b>No PR raised</b><span>The session finished but no pull request was found for {{ r.session?.branch }}. Fix it resumes the session and asks Claude to push and open one.</span></div>
-          <div class="act"><button class="btn primary" data-primary [disabled]="busy()" (click)="fix()">Fix it</button></div>
         </div>
       }
       @case ('fixing') {

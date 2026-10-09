@@ -3,7 +3,18 @@
 Desktop app that lists your Azure DevOps work items and (in later phases) runs Claude Code sessions on them.
 Tauri 2 + Rust core + Angular UI. See `Foreman — Product Requirements.md` and `design/`.
 
-**Status: all four phases built** — work items, sessions in git worktrees, PR monitoring with Fix it, and Complete merge with clean-up. See "Not yet proven" below.
+Each work item gets its own conversation with Claude, laid out in three panes:
+
+- **Left:** your Azure DevOps items for the chosen sprint and person, grouped by what needs you.
+- **Centre:** the chat for the selected item. Starting a session sends Claude the item's details and it works
+  through to a pull request without asking for confirmation; you can message it, paste images and answer its questions.
+- **Right:** that session's progress, branch and folder, pull request state and checks, and the work item itself.
+
+Each item works in its own git worktree, prepared from the repository mapping in Settings (local config files copied in,
+setup command run). Foreman checks each PR every minute; when one fails, **Fix it** sends the build log and review
+comments into that item's conversation. **Open in Claude desktop** hands the same conversation to the Claude desktop app.
+
+The requirements document in this repo describes the earlier status-board design and has not been updated to this one.
 
 ## Run
 

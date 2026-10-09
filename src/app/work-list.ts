@@ -8,8 +8,8 @@ import { GroupKey, Store, ago, leaf } from './store';
   imports: [StatusIcon, TypeIcon],
   host: { role: 'listbox', 'aria-label': 'Work items' },
   styles: `
-    :host { width: 410px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--surface); min-height: 0; }
-    @media (max-width: 1100px) { :host { width: 340px; } }
+    :host { width: 320px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--surface); min-height: 0; }
+    @media (max-width: 1300px) { :host { width: 280px; } }
     .list { flex: 1; }
     .empty { padding: 32px 20px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .empty b { font-weight: 600; }

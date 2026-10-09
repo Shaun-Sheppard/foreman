@@ -12,6 +12,14 @@ export async function runStub(start: Extract<FromCore, { type: 'start' }>, isSto
     send({ type: 'ended', outcome, costUsd: outcome === 'success' ? 0.37 : null, durationMs: null, error: null });
 
   send({ type: 'session_id', sessionId: start.resume ?? `stub-${Date.now()}` });
+  // A short follow-up message in an existing conversation gets a short reply, not a full run.
+  if (start.resume && start.prompt.length < 400) {
+    await sleep(pace);
+    if (isStopped()) return ended('cancelled');
+    const seen = start.images?.length ? ` I can see the ${start.images.length} image${start.images.length === 1 ? '' : 's'} you attached.` : '';
+    send({ type: 'log', entry: { kind: 'text', text: `You said: **${start.prompt.trim()}**.${seen}\n\nThis is the stubbed agent, so nothing was changed. A real session would:\n\n1. Read the relevant code\n2. Make the change\n3. Run \`dotnet test\`` } });
+    return ended('success');
+  }
   send({ type: 'log', entry: { kind: 'text', text: start.resume ? 'Picking up where I left off.' : "I'll start by reading the work item." } });
   for (const [i, step] of steps.entries()) {
     step.state = 'in_progress';

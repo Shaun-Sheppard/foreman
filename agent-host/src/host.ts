@@ -2,6 +2,7 @@
  * Foreman agent host: one process per session. Drives Claude Code through the
  * Claude Agent SDK and talks to the Rust core over stdin/stdout as JSON Lines.
  */
+import { readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { createSdkMcpServer, query, tool, type CanUseTool, type PermissionResult, type SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
@@ -83,13 +84,24 @@ function makeCanUseTool(start: StartMsg): CanUseTool {
   };
 }
 
+type MediaType = 'image/png' | 'image/jpeg' | 'image/gif' | 'image/webp';
+
+/** The user's message: any pasted images first, then the text. */
+function userContent(start: StartMsg) {
+  const images = (start.images ?? []).map((img) => ({
+    type: 'image' as const,
+    source: { type: 'base64' as const, media_type: img.mediaType as MediaType, data: readFileSync(img.path).toString('base64') },
+  }));
+  return images.length ? [...images, { type: 'text' as const, text: start.prompt }] : start.prompt;
+}
+
 async function run(start: StartMsg): Promise<void> {
   let finished: () => void = () => undefined;
   const done = new Promise<void>((resolve) => (finished = resolve));
 
   // canUseTool needs streaming input, and the stream must stay open until the result arrives.
   async function* input(): AsyncGenerator<SDKUserMessage> {
-    yield { type: 'user', message: { role: 'user', content: start.prompt }, parent_tool_use_id: null };
+    yield { type: 'user', message: { role: 'user', content: userContent(start) }, parent_tool_use_id: null };
     await done;
   }
 

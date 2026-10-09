@@ -27,8 +27,14 @@ export interface Question {
   options: { label: string; description?: string }[];
 }
 
+/** An image the user attached to their message, saved to disk by the core. */
+export interface Image {
+  mediaType: string;
+  path: string;
+}
+
 export type FromCore =
-  | { type: 'start'; cwd: string; prompt: string; model?: string; resume?: string; allowAllTools: boolean; allowedTools: string[] }
+  | { type: 'start'; cwd: string; prompt: string; images?: Image[]; model?: string; resume?: string; allowAllTools: boolean; allowedTools: string[] }
   | { type: 'approve'; requestId: string }
   | { type: 'deny'; requestId: string; message?: string }
   | { type: 'reply'; requestId: string; answers: Record<string, string> }

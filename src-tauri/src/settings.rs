@@ -14,9 +14,43 @@ pub struct RepoMapping {
     pub area_path: String,
     pub repo_path: String,
     pub default_branch: String,
+    /// Untracked files to copy from the repo into each new worktree, e.g. `.env` or
+    /// `**/appsettings.Development.json`, so sessions start with your local config.
+    pub copy_files: Vec<String>,
+    /// Run once in each new worktree, e.g. `dotnet restore && npm ci`.
+    pub setup_command: String,
 }
 
 pub const DEFAULT_IMPLEMENT_TEMPLATE: &str = "\
+Work on Azure DevOps {type} #{id}: \"{title}\".
+
+You are in a git worktree of {repo} on branch {branch}, created from {target}. Keep all changes inside this folder.
+
+The work item's details are below. Use the az CLI (already signed in) for anything else you need from Azure DevOps, such as child items, linked items or the full discussion.
+
+Work through it without waiting for my confirmation:
+1. Plan your steps, then implement the change and run the relevant tests.
+2. Commit with a message that references the work item as AB#{id}.
+3. Push {branch} and open a pull request into {target} linked to work item #{id} (az repos pr create --source-branch {branch} --target-branch {target} --work-items {id}).
+4. Add a comment to the work item summarising what you changed and linking the pull request.
+
+Do not change the work item's state. If you genuinely need a decision from me, ask with the AskUserQuestion tool instead of guessing; otherwise keep going.";
+
+pub const DEFAULT_REVIEW_TEMPLATE: &str = "\
+Review Azure DevOps {type} #{id}: \"{title}\".
+
+You are in a git worktree of {repo} on branch {branch}, created from {target}. Do not change code, commit or push.
+
+The work item's details are below. Use the az CLI (already signed in) for anything else you need from Azure DevOps.
+
+1. Plan your steps, then check the existing implementation against every acceptance criterion and run the tests.
+2. Finish with a summary of what is done, what is missing and any risks, with file and line references.
+
+Do not change the work item's state. If you need a decision from me, ask with the AskUserQuestion tool instead of guessing.";
+
+/// Defaults shipped by earlier versions. Settings saved with one of these are moved to the current default.
+const LEGACY_TEMPLATES: [&str; 2] = [
+    "\
 Work on Azure DevOps {type} #{id}: \"{title}\".
 
 You are in a git worktree of {repo} on branch {branch}, created from {target}. Keep all changes inside this folder.
@@ -26,9 +60,8 @@ You are in a git worktree of {repo} on branch {branch}, created from {target}. K
 3. Commit with a message that references the work item as AB#{id}.
 4. Push {branch} and open a pull request into {target} linked to work item #{id} (for example: az repos pr create --source-branch {branch} --target-branch {target} --work-items {id}).
 
-Do not change the work item's state in Azure DevOps. If you need a decision from me, ask with the AskUserQuestion tool instead of guessing.";
-
-pub const DEFAULT_REVIEW_TEMPLATE: &str = "\
+Do not change the work item's state in Azure DevOps. If you need a decision from me, ask with the AskUserQuestion tool instead of guessing.",
+    "\
 Review Azure DevOps {type} #{id}: \"{title}\".
 
 You are in a git worktree of {repo} on branch {branch}, created from {target}. Do not change code, commit or push.
@@ -37,7 +70,8 @@ You are in a git worktree of {repo} on branch {branch}, created from {target}. D
 2. Check the existing implementation against every acceptance criterion and run the tests.
 3. Finish with a summary of what is done, what is missing and any risks, with file and line references.
 
-Do not change the work item's state in Azure DevOps. If you need a decision from me, ask with the AskUserQuestion tool instead of guessing.";
+Do not change the work item's state in Azure DevOps. If you need a decision from me, ask with the AskUserQuestion tool instead of guessing.",
+];
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
@@ -169,6 +203,12 @@ impl Settings {
         if self.default_mode != "review" {
             self.default_mode = "implement".into();
         }
+        if LEGACY_TEMPLATES.contains(&self.implement_template.as_str()) {
+            self.implement_template.clear();
+        }
+        if LEGACY_TEMPLATES.contains(&self.review_template.as_str()) {
+            self.review_template.clear();
+        }
         if self.implement_template.trim().is_empty() {
             self.implement_template = DEFAULT_IMPLEMENT_TEMPLATE.into();
         }
@@ -183,6 +223,8 @@ impl Settings {
             r.area_path = r.area_path.trim().trim_end_matches('\\').to_string();
             r.repo_path = r.repo_path.trim().to_string();
             r.default_branch = r.default_branch.trim().to_string();
+            r.setup_command = r.setup_command.trim().to_string();
+            r.copy_files = r.copy_files.iter().map(|f| f.trim().to_string()).filter(|f| !f.is_empty()).collect();
         }
         self
     }

@@ -77,7 +77,7 @@ impl Db {
         conn.execute_batch("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;").map_err(e)?;
         conn.execute_batch(SCHEMA).map_err(e)?;
         // Columns added after the first release; ignore "duplicate column" on later launches.
-        for column in ["base_branch TEXT NOT NULL DEFAULT ''", "model TEXT NOT NULL DEFAULT ''", "prompt TEXT NOT NULL DEFAULT ''", "error TEXT", "created_at TEXT NOT NULL DEFAULT ''", "port_base INTEGER NOT NULL DEFAULT 0", "project TEXT NOT NULL DEFAULT ''", "resume_from TEXT"] {
+        for column in ["base_branch TEXT NOT NULL DEFAULT ''", "model TEXT NOT NULL DEFAULT ''", "prompt TEXT NOT NULL DEFAULT ''", "error TEXT", "created_at TEXT NOT NULL DEFAULT ''", "port_base INTEGER NOT NULL DEFAULT 0", "project TEXT NOT NULL DEFAULT ''", "resume_from TEXT", "turn TEXT NOT NULL DEFAULT 'start'", "attachments TEXT NOT NULL DEFAULT '[]'"] {
             let _ = conn.execute(&format!("ALTER TABLE session ADD COLUMN {column}"), []);
         }
         Ok(Self(Mutex::new(conn)))
@@ -137,7 +137,7 @@ impl Db {
 }
 
 const SESSION_COLUMNS: &str = "id, work_item_id, mode, sdk_session_id, repo_path, worktree_path, branch, state, \
-     started_at, ended_at, outcome, cost_usd, base_branch, model, prompt, error, created_at, port_base, project, resume_from";
+     started_at, ended_at, outcome, cost_usd, base_branch, model, prompt, error, created_at, port_base, project, resume_from, turn, attachments";
 
 fn session_from_row(r: &rusqlite::Row) -> rusqlite::Result<Session> {
     Ok(Session {
@@ -161,6 +161,8 @@ fn session_from_row(r: &rusqlite::Row) -> rusqlite::Result<Session> {
         port_base: r.get(17)?,
         project: r.get(18)?,
         resume_from: r.get(19)?,
+        turn: r.get(20)?,
+        attachments: r.get(21)?,
     })
 }
 
@@ -173,19 +175,20 @@ impl Db {
                 // An upsert, not INSERT OR REPLACE: replacing would delete the row and cascade away its steps.
                 &format!(
                     "INSERT INTO session ({SESSION_COLUMNS})
-                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22)
                      ON CONFLICT(id) DO UPDATE SET
                        sdk_session_id = excluded.sdk_session_id, worktree_path = excluded.worktree_path,
                        branch = excluded.branch, state = excluded.state, started_at = excluded.started_at,
                        ended_at = excluded.ended_at, outcome = excluded.outcome, cost_usd = excluded.cost_usd,
                        base_branch = excluded.base_branch, model = excluded.model, prompt = excluded.prompt,
                        error = excluded.error, created_at = excluded.created_at, port_base = excluded.port_base,
-                       project = excluded.project, resume_from = excluded.resume_from"
+                       project = excluded.project, resume_from = excluded.resume_from, turn = excluded.turn,
+                       attachments = excluded.attachments"
                 ),
                 params![
                     s.id, s.work_item_id, s.mode, s.sdk_session_id, s.repo_path, s.worktree_path, s.branch, s.state,
                     s.started_at, s.ended_at, s.outcome, s.cost_usd, s.base_branch, s.model, s.prompt, s.error,
-                    s.created_at, s.port_base, s.project, s.resume_from
+                    s.created_at, s.port_base, s.project, s.resume_from, s.turn, s.attachments
                 ],
             )
             .map_err(e)?;
@@ -281,7 +284,7 @@ mod tests {
             id: "a".into(), work_item_id: 1, mode: "implement".into(), sdk_session_id: None, repo_path: "/r".into(),
             worktree_path: "/w".into(), branch: "b".into(), state: "running".into(), started_at: None, ended_at: None,
             outcome: None, cost_usd: None, base_branch: "dev".into(), model: String::new(), prompt: "p".into(),
-            error: None, created_at: "t".into(), port_base: 42000, project: "P".into(), resume_from: None,
+            error: None, created_at: "t".into(), port_base: 42000, project: "P".into(), resume_from: None, turn: "start".into(), attachments: "[]".into(),
         };
         db.save_session(&s).unwrap();
         db.replace_steps("a", &[Step { text: "one".into(), state: "completed".into() }], "t").unwrap();

@@ -16,6 +16,10 @@ export interface RepoMapping {
   areaPath: string;
   repoPath: string;
   defaultBranch: string;
+  /** Untracked files copied into each new worktree, e.g. `.env`. */
+  copyFiles: string[];
+  /** Run once in each new worktree, e.g. `dotnet restore`. */
+  setupCommand: string;
 }
 
 export interface RepoInfo {
@@ -131,17 +135,23 @@ export interface Session {
   outcome: string | null;
   costUsd: number | null;
   error: string | null;
+  /** What the current or last turn is. */
+  turn: 'start' | 'chat' | 'fix';
   steps: Step[];
   pending: PendingInput | null;
   queuePosition: number | null;
 }
 
 export interface LogEntry {
-  kind: 'text' | 'tool' | 'result' | 'error' | 'info';
+  kind: 'text' | 'tool' | 'result' | 'error' | 'info' | 'user' | 'brief';
   tool?: string;
   id?: string;
   text: string;
   ts: string;
+  /** `user`: how many images were attached. */
+  images?: number;
+  /** `brief`: what this block of instructions is. */
+  label?: string;
 }
 
 export interface StartRequest {
@@ -151,6 +161,13 @@ export interface StartRequest {
   baseBranch: string;
   model: string;
   prompt: string | null;
+  note: string | null;
+}
+
+export interface ImageUpload {
+  mediaType: string;
+  /** Base64 without a data-URL prefix. */
+  data: string;
 }
 
 /** Offered when starting a session; an empty id leaves the choice to Claude Code's own default. */
@@ -249,6 +266,8 @@ export const backend = {
   fixPr: (workItemId: number) => invoke<void>('fix_pr', { workItemId }),
   completeMerge: (workItemId: number) => invoke<void>('complete_merge', { workItemId }),
   refreshPrs: () => invoke<void>('refresh_prs'),
+  sendMessage: (sessionId: string, text: string, images: ImageUpload[]) => invoke<void>('send_message', { sessionId, text, images }),
+  openInDesktop: (sessionId: string) => invoke<void>('open_in_desktop', { sessionId }),
   stopSession: (sessionId: string) => invoke<void>('stop_session', { sessionId }),
   resumeSession: (sessionId: string) => invoke<void>('resume_session', { sessionId }),
   answerSession: (

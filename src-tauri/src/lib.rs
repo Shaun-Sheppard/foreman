@@ -242,12 +242,14 @@ struct StartArgs {
     model: String,
     /// Only supplied when the user edited the preview.
     prompt: Option<String>,
+    /// Anything the user wants to add to the brief for this item.
+    note: Option<String>,
 }
 
 /// Queues a session on a work item, in the chosen repository, base branch and model (FR2).
 #[tauri::command]
 async fn start_session(app: AppHandle, state: State<'_, AppState>, request: StartArgs) -> CmdResult<()> {
-    let StartArgs { work_item_id, mode, repo_path, base_branch, model, prompt } = request;
+    let StartArgs { work_item_id, mode, repo_path, base_branch, model, prompt, note } = request;
     let item = listed_item(&state, work_item_id)?;
     if !state.fixture && !state.settings().repositories.iter().any(|r| r.repo_path == repo_path) {
         return Err(invalid("Map this project to a local repository in Settings first"));
@@ -255,6 +257,10 @@ async fn start_session(app: AppHandle, state: State<'_, AppState>, request: Star
     let prompt = match prompt.filter(|p| !p.trim().is_empty()) {
         Some(edited) => edited,
         None => build_prompt(&state, &item, &mode, &repo_path, &base_branch).await,
+    };
+    let prompt = match note.as_deref().map(str::trim).filter(|n| !n.is_empty()) {
+        Some(note) => format!("{prompt}\n\nA note from me before you start:\n{note}"),
+        None => prompt,
     };
     let req = sessions::StartRequest { work_item_id, mode, repo_path, base_branch, model, prompt, title: item.title, project: item.project };
     sessions::start(&app, req).map_err(invalid)
@@ -275,6 +281,20 @@ async fn complete_merge(app: AppHandle, work_item_id: u64) -> CmdResult<()> {
 #[tauri::command]
 fn refresh_prs(state: State<AppState>) {
     state.pr_refresh.notify_one();
+}
+
+/// The user's next message in an item's conversation.
+#[tauri::command]
+fn send_message(app: AppHandle, session_id: String, text: String, images: Vec<sessions::ImageUpload>) -> CmdResult<()> {
+    sessions::send_message(&app, &session_id, &text, images).map_err(invalid)
+}
+
+#[tauri::command]
+async fn open_in_desktop(app: AppHandle, session_id: String) -> CmdResult<()> {
+    tauri::async_runtime::spawn_blocking(move || sessions::open_in_desktop(&app, &session_id))
+        .await
+        .map_err(|e| invalid(e.to_string()))?
+        .map_err(invalid)
 }
 
 #[tauri::command]
@@ -433,6 +453,8 @@ pub fn run() {
             preview_prompt,
             start_session,
             stop_session,
+            send_message,
+            open_in_desktop,
             fix_pr,
             complete_merge,
             refresh_prs,

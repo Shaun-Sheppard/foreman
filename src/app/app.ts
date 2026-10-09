@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { backend, PERSON_EVERYONE, PERSON_ME, Person, Sprint, SPRINT_CURRENT } from './backend';
-import { DetailPane } from './detail-pane';
+import { Chat } from './chat';
 import { StatusIcon } from './icons';
 import { Picker, PickerOption } from './picker';
 import { SettingsView } from './settings-view';
+import { SidePanel } from './side-panel';
 import { ChipKey, Store } from './store';
 import { WorkList } from './work-list';
 
@@ -22,7 +23,7 @@ function since(iso: string, now: number): string {
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StatusIcon, Picker, WorkList, DetailPane, SettingsView],
+  imports: [StatusIcon, Picker, WorkList, Chat, SidePanel, SettingsView],
   host: { '(window:keydown)': 'onKey($event)' },
   styleUrl: './app.css',
   templateUrl: './app.html',
@@ -162,7 +163,7 @@ export class App {
       s.view.set('main');
     } else if (ev.key === 'Enter' && s.view() === 'main' && target.tagName !== 'BUTTON') {
       // Enter moves focus to the detail pane's primary action (Start, Approve, Resume…).
-      document.querySelector<HTMLElement>('fm-detail-pane [data-primary]:not(:disabled)')?.focus();
+      (document.querySelector<HTMLElement>('fm-chat [data-primary]:not(:disabled)') ?? document.querySelector<HTMLElement>('fm-chat textarea'))?.focus();
     } else if (ev.key === '/') {
       ev.preventDefault();
       s.view.set('main');

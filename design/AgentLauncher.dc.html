@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%}body{-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}button{font:inherit;color:inherit}input,textarea{font:inherit}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #63a4f4;outline-offset:1px}</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position:relative;width:100%;height:{{ rootH }};display:flex;flex-direction:column;background:{{ t.bg }};color:{{ t.text }};font-family:'Geist',system-ui,sans-serif;font-size:13px;line-height:1.4;overflow:hidden">
+
+  <div style="height:40px;flex:none;display:flex;align-items:center;gap:8px;padding-left:12px;border-bottom:1px solid {{ t.border }};background:{{ t.surface }};-webkit-app-region:drag">
+    <div style="display:flex;align-items:center;gap:8px;padding-right:6px">
+      <div style="width:14px;height:14px;border-radius:4px;border:1.5px solid {{ t.text }};display:grid;place-items:center"><div style="width:5px;height:5px;border-radius:1px;background:{{ t.text }}"></div></div>
+      <span style="font-weight:600;letter-spacing:-0.01em;white-space:nowrap">Agent Launcher</span>
+    </div>
+    <div style="width:1px;height:18px;background:{{ t.border }}"></div>
+    <div style="position:relative;-webkit-app-region:no-drag">
+      <button onClick="{{ openSprint }}" disabled="{{ noConn }}" style="display:flex;align-items:center;gap:6px;height:28px;padding:0 8px;border:1px solid {{ t.border }};border-radius:6px;background:transparent;cursor:pointer;opacity:{{ selOpacity }}" style-hover="background:{{ t.hover }}">
+        <span style="font-weight:500;white-space:nowrap">{{ sprint }}</span>
+        <span style="font-size:11px;color:{{ t.text3 }}">{{ sprintNote }}</span>
+        <span style="font-size:9px;color:{{ t.text3 }}">▼</span>
+      </button>
+      <sc-if value="{{ sprintOpen }}">
+        <div style="position:absolute;top:34px;left:0;z-index:30;width:240px;background:{{ t.raised }};border:1px solid {{ t.border2 }};border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px">
+          <input value="{{ popQ }}" onChange="{{ onPopQ }}" placeholder="Search sprints" style="height:28px;padding:0 8px;margin-bottom:4px;border:1px solid {{ t.border }};border-radius:5px;background:{{ t.input }};color:{{ t.text }};outline:none">
+          <sc-for list="{{ popOpts }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border:0;border-radius:5px;background:{{ o.bg }};text-align:left;cursor:pointer" style-hover="background:{{ t.hover }}"><span style="width:12px;font-size:11px">{{ o.mark }}</span><span style="flex:1">{{ o.label }}</span><span style="color:{{ t.text3 }};font-size:12px">{{ o.note }}</span></button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <div style="position:relative;-webkit-app-region:no-drag">
+      <button onClick="{{ openPerson }}" disabled="{{ noConn }}" style="display:flex;align-items:center;gap:6px;height:28px;padding:0 8px 0 4px;border:1px solid {{ t.border }};border-radius:6px;background:transparent;cursor:pointer;opacity:{{ selOpacity }}" style-hover="background:{{ t.hover }}">
+        <span style="width:20px;height:20px;border-radius:50%;background:{{ t.sel }};display:grid;place-items:center;font-size:10px;font-weight:600">{{ personInitials }}</span>
+        <span style="font-weight:500;white-space:nowrap">{{ person }}</span>
+        <span style="font-size:9px;color:{{ t.text3 }}">▼</span>
+      </button>
+      <sc-if value="{{ personOpen }}">
+        <div style="position:absolute;top:34px;left:0;z-index:30;width:240px;background:{{ t.raised }};border:1px solid {{ t.border2 }};border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px">
+          <input value="{{ popQ }}" onChange="{{ onPopQ }}" placeholder="Search people" style="height:28px;padding:0 8px;margin-bottom:4px;border:1px solid {{ t.border }};border-radius:5px;background:{{ t.input }};color:{{ t.text }};outline:none">
+          <sc-for list="{{ popOpts }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border:0;border-radius:5px;background:{{ o.bg }};text-align:left;cursor:pointer" style-hover="background:{{ t.hover }}"><span style="width:12px;font-size:11px">{{ o.mark }}</span><span style="flex:1">{{ o.label }}</span><span style="color:{{ t.text3 }};font-size:12px">{{ o.note }}</span></button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1;min-width:8px"></div>
+    <div style="display:flex;align-items:center;gap:6px;height:28px;width:{{ searchW }};padding:0 8px;border:1px solid {{ t.border }};border-radius:6px;background:{{ t.input }};-webkit-app-region:no-drag;box-sizing:border-box">
+      <svg width="13" height="13" viewBox="0 0 16 16" style="flex:none"><circle cx="7" cy="7" r="4.5" style="fill:none;stroke:{{ t.text3 }};stroke-width:1.5"></circle><path d="M10.5 10.5 L14 14" style="stroke:{{ t.text3 }};stroke-width:1.5;stroke-linecap:round"></path></svg>
+      <input ref="{{ searchRef }}" value="{{ q }}" onChange="{{ onQ }}" disabled="{{ noConn }}" placeholder="Search ID or title" style="flex:1;min-width:0;border:0;outline:none;background:transparent;color:{{ t.text }};font-size:12.5px">
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ t.text3 }};border:1px solid {{ t.border }};border-radius:4px;padding:0 5px;line-height:16px">/</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding-left:6px;font-size:12px;color:{{ syncColor }};-webkit-app-region:no-drag">
+      <sc-if value="{{ syncError }}"><x-import component="StatusIcon" from="./status-icons.js" status="failed" theme="{{ theme }}" size="12" hint-size="12px,12px"></x-import></sc-if>
+      <span style="white-space:nowrap;font-variant-numeric:tabular-nums">{{ syncText }}</span>
+      <button onClick="{{ refresh }}" title="Sync now" aria-label="Sync now" style="width:26px;height:26px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:{{ t.text2 }};font-size:14px" style-hover="background:{{ t.hover }}">↻</button>
+    </div>
+    <button onClick="{{ openSettings }}" title="Settings" aria-label="Settings" style="width:30px;height:28px;border:1px solid {{ settingsBorder }};border-radius:6px;background:{{ settingsBg }};cursor:pointer;display:grid;place-items:center;-webkit-app-region:no-drag" style-hover="background:{{ t.hover }}">
+      <svg width="14" height="14" viewBox="0 0 16 16"><path d="M2 4 H14 M2 8 H14 M2 12 H14" style="stroke:{{ t.text2 }};stroke-width:1.4;stroke-linecap:round"></path><circle cx="10" cy="4" r="1.8" style="fill:{{ t.surface }};stroke:{{ t.text2 }};stroke-width:1.4"></circle><circle cx="5" cy="8" r="1.8" style="fill:{{ t.surface }};stroke:{{ t.text2 }};stroke-width:1.4"></circle><circle cx="11" cy="12" r="1.8" style="fill:{{ t.surface }};stroke:{{ t.text2 }};stroke-width:1.4"></circle></svg>
+    </button>
+    <div style="display:flex;margin-left:6px;-webkit-app-region:no-drag">
+      <button aria-label="Minimise" style="width:40px;height:40px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer" style-hover="background:{{ t.hover }}"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 5 H9" style="stroke:{{ t.text2 }};stroke-width:1.2"></path></svg></button>
+      <button aria-label="Maximise" style="width:40px;height:40px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer" style-hover="background:{{ t.hover }}"><svg width="10" height="10" viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" style="fill:none;stroke:{{ t.text2 }};stroke-width:1.2"></rect></svg></button>
+      <button aria-label="Close" style="width:40px;height:40px;border:0;background:transparent;display:grid;place-items:center;cursor:pointer" style-hover="background:{{ t.failBg }}"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5" style="stroke:{{ t.text2 }};stroke-width:1.2"></path></svg></button>
+    </div>
+  </div>
+
+  <sc-if value="{{ showStrip }}">
+    <div style="height:44px;flex:none;display:flex;align-items:center;gap:6px;padding:0 12px;border-bottom:1px solid {{ t.border }};background:{{ t.surface }}">
+      <button onClick="{{ fNeeds.onClick }}" aria-pressed="{{ fNeeds.active }}" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 10px 0 8px;border-radius:6px;border:1px solid {{ fNeeds.border }};background:{{ fNeeds.bg }};cursor:pointer;outline:{{ fNeeds.outline }};outline-offset:1px">
+        <x-import component="StatusIcon" from="./status-icons.js" status="needs_input" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+        <span style="font-weight:600;color:{{ fNeeds.color }}">Needs you</span>
+        <span style="font-family:'Geist Mono',monospace;font-weight:600;font-size:15px;color:{{ fNeeds.color }}">{{ fNeeds.n }}</span>
+      </button>
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+        <button onClick="{{ c.onClick }}" aria-pressed="{{ c.active }}" style="display:flex;align-items:center;gap:7px;height:30px;padding:0 10px 0 8px;border-radius:6px;border:1px solid {{ c.border }};background:{{ c.bg }};cursor:pointer;color:{{ t.text2 }}" style-hover="background:{{ t.hover }}">
+          <x-import component="StatusIcon" from="./status-icons.js" status="{{ c.status }}" theme="{{ theme }}" size="13" animate="false" hint-size="13px,13px"></x-import>
+          <span>{{ c.label }}</span>
+          <span style="font-family:'Geist Mono',monospace;font-weight:500;color:{{ t.text }}">{{ c.n }}</span>
+        </button>
+      </sc-for>
+      <div style="flex:1"></div>
+      <sc-if value="{{ wide }}">
+        <div style="display:flex;align-items:center;gap:12px;font-size:11.5px;color:{{ t.text3 }}">
+          <span style="display:flex;align-items:center;gap:5px"><span style="font-family:'Geist Mono',monospace;border:1px solid {{ t.border }};border-radius:4px;padding:0 5px;color:{{ t.text2 }}">N</span>next needing you</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="font-family:'Geist Mono',monospace;border:1px solid {{ t.border }};border-radius:4px;padding:0 5px;color:{{ t.text2 }}">↑↓</span>move</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="font-family:'Geist Mono',monospace;border:1px solid {{ t.border }};border-radius:4px;padding:0 5px;color:{{ t.text2 }}">↵</span>open</span>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ syncError }}">
+    <div role="status" style="flex:none;display:flex;align-items:center;gap:10px;padding:7px 12px;background:{{ t.failBg }};border-bottom:1px solid {{ t.border }};font-size:12.5px;flex-wrap:wrap">
+      <x-import component="StatusIcon" from="./status-icons.js" status="failed" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+      <span style="font-weight:600">Can't sync with Azure DevOps — personal access token expired.</span>
+      <span style="color:{{ t.text2 }}">Showing data from the last good sync at 14:02 (12 min ago). Sessions keep running.</span>
+      <div style="flex:1"></div>
+      <button onClick="{{ openSettings }}" style="height:26px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Update token</button>
+      <button onClick="{{ refresh }}" style="height:26px;padding:0 10px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:{{ t.text2 }}" style-hover="background:{{ t.hover }}">Retry now</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMain }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex">
+      <div style="width:{{ leftW }};flex:none;display:flex;flex-direction:column;border-right:1px solid {{ t.border }};background:{{ t.surface }};min-height:0">
+        <div style="flex:1;overflow-y:auto">
+          <sc-if value="{{ listEmpty }}">
+            <div style="padding:32px 20px;display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+              <span style="font-weight:600">No work items match</span>
+              <span style="font-size:12.5px;color:{{ t.text2 }};text-wrap:pretty">{{ emptyFilterText }}</span>
+              <button onClick="{{ resetFilters }}" style="margin-top:6px;height:28px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Reset to Me · Sprint 42</button>
+            </div>
+          </sc-if>
+          <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+            <sc-if value="{{ g.show }}">
+              <div>
+                <button onClick="{{ g.toggle }}" aria-expanded="{{ g.open }}" style="position:sticky;top:0;z-index:2;width:100%;display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:0;border-bottom:1px solid {{ t.border }};background:{{ t.surface }};cursor:pointer;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ g.labelColor }}">
+                  <span style="width:10px;font-size:9px;color:{{ t.text3 }}">{{ g.chev }}</span>
+                  <span>{{ g.label }}</span>
+                  <span style="font-family:'Geist Mono',monospace;color:{{ t.text3 }};font-weight:500;letter-spacing:0">{{ g.count }}</span>
+                </button>
+                <sc-if value="{{ g.open }}">
+                  <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+                    <div onClick="{{ r.select }}" role="option" aria-selected="{{ r.sel }}" style="display:flex;flex-direction:column;gap:4px;padding:{{ rowPad }};background:{{ r.bg }};border-bottom:1px solid {{ t.border }};cursor:pointer;outline:{{ r.outline }};outline-offset:-2px;transition:background 0.6s" style-hover="background:{{ r.hoverBg }}">
+                      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                        <x-import component="StatusIcon" from="./status-icons.js" status="{{ r.status }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+                        <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }};flex:none">{{ r.id }}</span>
+                        <x-import component="TypeIcon" from="./status-icons.js" type="{{ r.type }}" theme="{{ theme }}" size="13" hint-size="13px,13px"></x-import>
+                        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.titleColor }}">{{ r.title }}</span>
+                      </div>
+                      <div style="display:flex;align-items:center;gap:8px;padding-left:22px;font-size:12px;color:{{ t.text2 }};min-width:0">
+                        <span style="color:{{ r.labelColor }};font-weight:{{ r.labelWeight }};white-space:nowrap;flex:none">{{ r.label }}</span>
+                        <sc-if value="{{ r.hasProg }}">
+                          <div style="display:flex;gap:2px;width:{{ r.barW }};flex:none"><sc-for list="{{ r.segs }}" as="s"><div style="flex:1;height:4px;border-radius:1px;background:{{ s.bg }}"></div></sc-for></div>
+                          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;flex:none">{{ r.progText }}</span>
+                        </sc-if>
+                        <sc-if value="{{ r.hasReason }}"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.reason }}</span></sc-if>
+                        <div style="flex:1"></div>
+                        <sc-if value="{{ r.hasPr }}"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;flex:none">!{{ r.pr }}</span></sc-if>
+                        <span style="flex:none;font-variant-numeric:tabular-nums;color:{{ t.text3 }}">{{ r.ago }}</span>
+                      </div>
+                    </div>
+                  </sc-for>
+                </sc-if>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:{{ t.bg }}">
+        <sc-if value="{{ noSel }}">
+          <div style="flex:1;display:grid;place-items:center;padding:24px;overflow:auto">
+            <div style="width:min(440px,100%);display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:16px;font-weight:600">{{ emptyTitle }}</div>
+              <div style="color:{{ t.text2 }};text-wrap:pretty">{{ emptySub }}</div>
+              <sc-if value="{{ hasAttList }}">
+                <div style="display:flex;flex-direction:column;border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+                  <sc-for list="{{ attList }}" as="a">
+                    <button onClick="{{ a.select }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-top:{{ a.borderTop }};background:transparent;cursor:pointer;text-align:left" style-hover="background:{{ t.hover }}">
+                      <x-import component="StatusIcon" from="./status-icons.js" status="{{ a.status }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+                      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ a.id }}</span>
+                      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500">{{ a.title }}</span>
+                      <span style="font-size:12px;color:{{ a.color }};font-weight:500;white-space:nowrap">{{ a.label }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+                <div style="font-size:12px;color:{{ t.text3 }}">Press <span style="font-family:'Geist Mono',monospace;border:1px solid {{ t.border }};border-radius:4px;padding:0 5px;color:{{ t.text2 }}">N</span> to jump to the next one.</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ hasD }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:none;padding:{{ hdrPad }};border-bottom:1px solid {{ t.border }};display:flex;flex-direction:column;gap:8px;background:{{ t.surface }}">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:{{ t.text2 }}">
+              <x-import component="TypeIcon" from="./status-icons.js" type="{{ d.type }}" theme="{{ theme }}" size="13" hint-size="13px,13px"></x-import>
+              <span>{{ d.typeLabel }}</span>
+              <span style="font-family:'Geist Mono',monospace;color:{{ t.text }}">#{{ d.id }}</span>
+              <span style="color:{{ t.text3 }}">·</span>
+              <span style="font-family:'Geist Mono',monospace">{{ d.area }}</span>
+              <div style="flex:1"></div>
+              <sc-if value="{{ d.hasElapsed }}"><span style="font-family:'Geist Mono',monospace;color:{{ t.text2 }};font-variant-numeric:tabular-nums">{{ d.elapsed }}</span></sc-if>
+              <a href="#" style="color:{{ t.text2 }};white-space:nowrap">Open in DevOps ↗</a>
+            </div>
+            <div style="font-size:17px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;text-wrap:pretty">{{ d.title }}</div>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:{{ t.text2 }}">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:{{ d.badgeBg }};color:{{ d.badgeColor }};font-weight:600">
+                <x-import component="StatusIcon" from="./status-icons.js" status="{{ d.status }}" theme="{{ theme }}" size="13" hint-size="13px,13px"></x-import>
+                {{ d.label }}
+              </span>
+              <span><span style="color:{{ t.text3 }}">State </span>{{ d.state }}</span>
+              <span><span style="color:{{ t.text3 }}">Assignee </span>Shaun Sheppard</span>
+              <span><span style="color:{{ t.text3 }}">Sprint </span>42</span>
+              <sc-if value="{{ d.hasMode }}"><span><span style="color:{{ t.text3 }}">Mode </span>{{ d.mode }}</span></sc-if>
+              <sc-if value="{{ d.hasBranch }}"><span style="font-family:'Geist Mono',monospace;font-size:11.5px">{{ d.branch }}</span></sc-if>
+            </div>
+          </div>
+
+          <sc-if value="{{ d.showNeeds }}">
+            <div role="alert" style="flex:none;margin:12px {{ padX }} 0;border:1px solid {{ t.att }};border-radius:8px;background:{{ t.attBg }};padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <x-import component="StatusIcon" from="./status-icons.js" status="needs_input" theme="{{ theme }}" size="16" hint-size="16px,16px"></x-import>
+                <span style="font-weight:600">{{ d.q.title }}</span>
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ t.text2 }};border:1px solid {{ t.border2 }};border-radius:4px;padding:0 6px">{{ d.q.kind }}</span>
+                <div style="flex:1"></div>
+                <span style="font-size:12px;color:{{ t.text2 }}">Waiting 2m · step {{ d.q.step }}</span>
+              </div>
+              <div style="text-wrap:pretty;line-height:1.5">{{ d.q.text }}</div>
+              <div style="font-family:'Geist Mono',monospace;font-size:12px;background:{{ t.code }};border:1px solid {{ t.border }};border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-all;color:{{ t.text }}">{{ d.q.cmd }}</div>
+              <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+                <input value="{{ reply }}" onChange="{{ onReply }}" placeholder="Reply to Claude (optional) — e.g. use the Docker database instead" style="flex:1;min-width:220px;height:32px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};outline:none;box-sizing:border-box">
+                <button onClick="{{ approve }}" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;cursor:pointer">Approve<span style="font-family:'Geist Mono',monospace;font-size:10.5px;opacity:0.7">Ctrl ↵</span></button>
+                <button onClick="{{ deny }}" style="height:32px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};font-weight:500;cursor:pointer">Deny</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="flex:1;min-height:0;overflow-y:auto;padding:16px {{ padX }} 28px;display:flex;flex-direction:column;gap:20px">
+
+            <sc-if value="{{ d.isNotStarted }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  <button ref="{{ primaryRef }}" onClick="{{ start }}" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 12px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;cursor:pointer">
+                    <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="1.5,1 9,5 1.5,9" style="fill:{{ t.btnText }}"></polygon></svg>{{ d.startLabel }}
+                  </button>
+                  <div role="radiogroup" aria-label="Session mode" style="display:flex;border:1px solid {{ t.border }};border-radius:7px;padding:2px;gap:2px;background:{{ t.surface }}">
+                    <sc-for list="{{ modes }}" as="m"><button onClick="{{ m.pick }}" role="radio" aria-checked="{{ m.on }}" style="height:28px;padding:0 10px;border:0;border-radius:5px;background:{{ m.bg }};color:{{ m.color }};font-weight:500;cursor:pointer">{{ m.label }}</button></sc-for>
+                  </div>
+                  <span style="font-size:12px;color:{{ d.slotColor }}">{{ d.slotNote }}</span>
+                </div>
+                <div style="border:1px solid {{ t.border }};border-radius:8px;background:{{ t.surface }}">
+                  <button onClick="{{ togglePrompt }}" aria-expanded="{{ promptOpen }}" style="width:100%;display:flex;align-items:center;gap:8px;height:36px;padding:0 12px;border:0;background:transparent;cursor:pointer;text-align:left">
+                    <span style="width:10px;font-size:9px;color:{{ t.text3 }}">{{ promptChev }}</span>
+                    <span style="font-weight:500">Prompt preview</span>
+                    <span style="font-size:12px;color:{{ t.text3 }}">{{ promptNote }}</span>
+                  </button>
+                  <sc-if value="{{ promptOpen }}">
+                    <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:6px">
+                      <textarea value="{{ promptText }}" onChange="{{ onPrompt }}" rows="9" style="width:100%;box-sizing:border-box;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.6;background:{{ t.code }};border:1px solid {{ t.border }};border-radius:6px;padding:10px 12px;resize:vertical;color:{{ t.text }};outline:none"></textarea>
+                      <span style="font-size:12px;color:{{ t.text3 }}">Edits apply to this launch only. Change the template in Settings → Sessions.</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+                <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }}">Description</div>
+                <sc-for list="{{ d.desc }}" as="p"><p style="margin:0;text-wrap:pretty;line-height:1.6">{{ p.text }}</p></sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;max-width:760px">
+                <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }}">Acceptance criteria</div>
+                <sc-for list="{{ d.ac }}" as="a"><div style="display:flex;gap:10px;line-height:1.55"><span style="width:11px;height:11px;margin-top:4px;border:1.5px solid {{ t.text3 }};border-radius:3px;flex:none"></span><span style="text-wrap:pretty">{{ a.text }}</span></div></sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ d.isQueued }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px dashed {{ t.border2 }};border-radius:8px;background:{{ t.surface }}">
+                <x-import component="StatusIcon" from="./status-icons.js" status="queued" theme="{{ theme }}" size="18" hint-size="18px,18px"></x-import>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Queued — next in line</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ d.queueNote }}</span></div>
+                <button onClick="{{ cancelQueue }}" style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Remove from queue</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ d.isCancelled }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid {{ t.border }};border-radius:8px;background:{{ t.surface }}">
+                <x-import component="StatusIcon" from="./status-icons.js" status="cancelled" theme="{{ theme }}" size="18" hint-size="18px,18px"></x-import>
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Session stopped</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ d.cancelNote }}</span></div>
+                <button onClick="{{ restart }}" style="height:30px;padding:0 12px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};cursor:pointer;font-weight:600">Start new session</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ d.showSteps }}">
+              <div style="display:flex;flex-direction:column">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }}">Steps</span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ d.progText }}</span>
+                  <div style="flex:1;max-width:180px;display:flex;gap:2px"><sc-for list="{{ d.segs }}" as="s"><div style="flex:1;height:4px;border-radius:1px;background:{{ s.bg }}"></div></sc-for></div>
+                </div>
+                <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+                  <sc-for list="{{ d.steps }}" as="s" hint-placeholder-count="6">
+                    <div style="border-top:{{ s.borderTop }}">
+                      <div onClick="{{ s.toggle }}" style="display:flex;align-items:center;gap:10px;padding:{{ stepPad }};background:{{ s.bg }};cursor:{{ s.cursor }}">
+                        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ t.text3 }};width:16px;text-align:right;flex:none">{{ s.n }}</span>
+                        <x-import component="StatusIcon" from="./status-icons.js" status="{{ s.icon }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import>
+                        <span style="flex:1;min-width:0;color:{{ s.color }};font-weight:{{ s.weight }}">{{ s.text }}</span>
+                        <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }};font-variant-numeric:tabular-nums">{{ s.time }}</span>
+                        <span style="width:14px;color:{{ t.text3 }};text-align:center;font-size:9px">{{ s.chev }}</span>
+                      </div>
+                      <sc-if value="{{ s.open }}">
+                        <div style="padding:0 14px 10px 66px;display:flex;flex-direction:column;gap:3px;background:{{ s.bg }}">
+                          <sc-for list="{{ s.detail }}" as="l"><div style="font-size:12px;color:{{ t.text2 }}">{{ l.l }}</div></sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden">
+                <button onClick="{{ toggleLog }}" aria-expanded="{{ logOpen }}" style="width:100%;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border:0;background:{{ t.surface }};cursor:pointer;text-align:left">
+                  <span style="width:10px;font-size:9px;color:{{ t.text3 }}">{{ logChev }}</span>
+                  <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }}">Activity</span>
+                  <span style="font-size:12px;color:{{ t.text3 }}">{{ d.logCount }}</span>
+                </button>
+                <sc-if value="{{ logOpen }}">
+                  <div style="background:{{ t.code }};border-top:1px solid {{ t.border }};padding:6px 0;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;line-height:1.65;max-height:{{ logMaxH }};overflow-y:auto">
+                    <sc-for list="{{ d.log }}" as="l" hint-placeholder-count="5">
+                      <div>
+                        <div onClick="{{ l.toggle }}" style="display:flex;gap:10px;padding:0 12px;cursor:{{ l.cursor }}" style-hover="background:{{ t.hover }}">
+                          <span style="color:{{ t.text3 }};flex:none">{{ l.time }}</span>
+                          <span style="width:10px;color:{{ t.text3 }};flex:none;font-size:9px">{{ l.chev }}</span>
+                          <span style="color:{{ l.toolColor }};font-weight:500;flex:none;width:44px">{{ l.tool }}</span>
+                          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{{ l.argColor }}">{{ l.arg }}</span>
+                          <span style="color:{{ t.text3 }};flex:none">{{ l.sum }}</span>
+                        </div>
+                        <sc-if value="{{ l.open }}">
+                          <div style="margin:2px 12px 4px 96px;padding-left:10px;border-left:1px solid {{ t.border2 }};color:{{ t.text2 }};white-space:pre;overflow-x:auto"><sc-for list="{{ l.lines }}" as="x"><div>{{ x.l }}</div></sc-for></div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ d.isPR }}">
+              <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid {{ t.border }};border-radius:8px;background:{{ t.surface }}">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                  <span style="font-family:'Geist Mono',monospace;font-weight:600">!{{ d.pr.n }}</span>
+                  <span style="flex:1;min-width:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.pr.title }}</span>
+                  <a href="#" style="font-size:12px;color:{{ t.text2 }};white-space:nowrap">Open PR in DevOps ↗</a>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }};flex-wrap:wrap">
+                  <span>{{ d.branch }}</span><span style="color:{{ t.text3 }}">→</span><span>{{ d.pr.target }}</span>
+                  <span style="color:{{ t.text3 }};font-family:'Geist',sans-serif">· {{ d.diffStat }}</span>
+                </div>
+              </div>
+
+              <sc-if value="{{ d.showFix }}">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;border:1px solid {{ t.fail }};border-radius:8px;background:{{ t.failBg }}">
+                  <x-import component="StatusIcon" from="./status-icons.js" status="failed" theme="{{ theme }}" size="20" hint-size="20px,20px"></x-import>
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-weight:600;font-size:14px">{{ d.failTitle }}</span>
+                    <span style="font-size:12.5px;color:{{ t.text2 }};text-wrap:pretty">{{ d.failSub }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+                    <button ref="{{ primaryRef }}" onClick="{{ fixIt }}" style="display:flex;align-items:center;gap:8px;height:36px;padding:0 18px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;font-size:13.5px;cursor:pointer">Fix it</button>
+                    <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:{{ t.text2 }}">{{ d.attemptText }}</span>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ d.showFixing }}">
+                <div style="display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid {{ t.run }};border-radius:8px;background:{{ t.runBg }}">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <x-import component="StatusIcon" from="./status-icons.js" status="fixing" theme="{{ theme }}" size="20" hint-size="20px,20px"></x-import>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600;font-size:14px">{{ d.attemptText }}</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ d.fixingSub }}</span></div>
+                    <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ d.elapsed }}</span>
+                    <button onClick="{{ stop }}" style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:transparent;color:{{ t.fail }};cursor:pointer;font-weight:500">Stop fix</button>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px;padding-left:32px">
+                    <sc-for list="{{ d.fixSteps }}" as="s"><div style="display:flex;align-items:center;gap:10px;height:26px"><x-import component="StatusIcon" from="./status-icons.js" status="{{ s.icon }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import><span style="flex:1;color:{{ s.color }};font-weight:{{ s.weight }}">{{ s.text }}</span><span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ s.time }}</span></div></sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ d.showReady }}">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;border:1px solid {{ t.pass }};border-radius:8px;background:{{ t.passBg }}">
+                  <x-import component="StatusIcon" from="./status-icons.js" status="ready" theme="{{ theme }}" size="20" hint-size="20px,20px"></x-import>
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-weight:600;font-size:14px">Ready to merge</span>
+                    <span style="font-size:12.5px;color:{{ t.text2 }}">All 5 checks passed · build 6m 04s · 0 open comments</span>
+                    <label style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:{{ t.text2 }}"><span style="width:12px;height:12px;border-radius:3px;background:{{ t.text }};display:grid;place-items:center"><svg width="8" height="8" viewBox="0 0 10 10"><path d="M2 5.2 L4.2 7.2 L8 3" style="fill:none;stroke:{{ t.surface }};stroke-width:1.8"></path></svg></span>Squash merge and delete <span style="font-family:'Geist Mono',monospace">{{ d.branch }}</span></label>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+                    <button ref="{{ primaryRef }}" onClick="{{ merge }}" style="height:36px;padding:0 18px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;font-size:13.5px;cursor:pointer">Complete merge</button>
+                    <span style="font-size:11.5px;color:{{ t.text2 }}">Nothing merges automatically</span>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ d.showStuck }}">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;border:2px solid {{ t.fail }};border-radius:8px;background:{{ t.failBg }}">
+                  <x-import component="StatusIcon" from="./status-icons.js" status="stuck" theme="{{ theme }}" size="22" hint-size="22px,22px"></x-import>
+                  <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-weight:600;font-size:14px">Stuck — 3 of 3 fix attempts failed</span>
+                    <span style="font-size:12.5px;color:{{ t.text2 }};text-wrap:pretty">Automatic fixes are used up. The last attempt still fails on IcsSerializerTests. This one needs you.</span>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button style="height:36px;padding:0 14px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};font-weight:500;cursor:pointer">Open in DevOps ↗</button>
+                    <button ref="{{ primaryRef }}" onClick="{{ manual }}" style="height:36px;padding:0 16px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;cursor:pointer">Start manual session</button>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ d.showChecksRunning }}">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid {{ t.border }};border-radius:8px;background:{{ t.surface }}">
+                  <x-import component="StatusIcon" from="./status-icons.js" status="pr_checks" theme="{{ theme }}" size="18" hint-size="18px,18px"></x-import>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">Checks running — nothing needs you yet</span><span style="font-size:12.5px;color:{{ t.text2 }}">You'll get a notification if a check fails or the PR is ready to merge.</span></div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ d.isMerged }}">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid {{ t.border }};border-radius:8px;background:{{ t.mergeBg }}">
+                  <x-import component="StatusIcon" from="./status-icons.js" status="merged" theme="{{ theme }}" size="18" hint-size="18px,18px"></x-import>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ d.mergedTitle }}</span><span style="font-size:12.5px;color:{{ t.text2 }}">Squash merge by you · work item moved to Resolved</span></div>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;flex-direction:column">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }}">Checks</span>
+                  <span style="font-size:12px;color:{{ t.text2 }}">{{ d.checkSummary }}</span>
+                  <div style="flex:1"></div>
+                  <span style="font-size:12px;color:{{ t.text3 }}">{{ pollText }}</span>
+                </div>
+                <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+                  <sc-for list="{{ d.checks }}" as="c" hint-placeholder-count="4">
+                    <div style="border-top:{{ c.borderTop }}">
+                      <div style="display:flex;align-items:center;gap:10px;padding:{{ stepPad }}">
+                        <x-import component="StatusIcon" from="./status-icons.js" status="{{ c.icon }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import>
+                        <span style="width:{{ checkNameW }};flex:none;font-weight:500">{{ c.name }}</span>
+                        <span style="flex:1;min-width:0;color:{{ c.resultColor }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.result }}</span>
+                        <sc-if value="{{ c.expandable }}"><button onClick="{{ c.toggle }}" aria-expanded="{{ c.open }}" style="height:24px;padding:0 8px;border:1px solid {{ t.border }};border-radius:5px;background:transparent;cursor:pointer;font-size:12px;color:{{ t.text2 }}">{{ c.chev }}</button></sc-if>
+                      </div>
+                      <sc-if value="{{ c.open }}">
+                        <div style="padding:0 14px 12px 39px;display:flex;flex-direction:column;gap:6px">
+                          <sc-if value="{{ c.isLog }}"><div style="font-family:'Geist Mono',monospace;font-size:12px;line-height:1.6;background:{{ t.code }};border:1px solid {{ t.border }};border-radius:6px;padding:8px 12px;white-space:pre;overflow-x:auto"><sc-for list="{{ c.logLines }}" as="x"><div style="color:{{ x.color }}">{{ x.l }}</div></sc-for></div></sc-if>
+                          <sc-if value="{{ c.isComments }}"><sc-for list="{{ c.comments }}" as="m"><div style="display:flex;flex-direction:column;gap:3px;padding:8px 10px;border:1px solid {{ t.border }};border-radius:6px;background:{{ t.bg }}"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ m.loc }}</span><span style="text-wrap:pretty;line-height:1.5">{{ m.text }}</span></div></sc-for></sc-if>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <sc-if value="{{ d.hasHistory }}">
+                <div style="display:flex;flex-direction:column">
+                  <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }};margin-bottom:8px">Session history</div>
+                  <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+                    <sc-for list="{{ d.history }}" as="h">
+                      <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:{{ h.borderTop }}">
+                        <x-import component="StatusIcon" from="./status-icons.js" status="{{ h.icon }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+                        <span style="width:120px;flex:none;font-weight:500">{{ h.label }}</span>
+                        <span style="flex:1;min-width:0;color:{{ t.text2 }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.sum }}</span>
+                        <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text3 }};white-space:nowrap">{{ h.when }}</span>
+                        <a href="#" style="font-size:12px;color:{{ t.text2 }};white-space:nowrap">Session log →</a>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ d.showControls }}">
+            <div style="flex:none;display:flex;align-items:center;gap:8px;padding:10px {{ padX }};border-top:1px solid {{ t.border }};background:{{ t.surface }}">
+              <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">View diff</button>
+              <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Open branch folder</button>
+              <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text3 }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">{{ d.diffStat }}</span>
+              <div style="flex:1"></div>
+              <button onClick="{{ stop }}" style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:transparent;color:{{ t.fail }};cursor:pointer;font-weight:500;white-space:nowrap" style-hover="background:{{ t.failBg }}">Stop session</button>
+            </div>
+          </sc-if>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showSettings }}">
+    <div style="flex:1;min-height:0;display:flex">
+      <div style="width:220px;flex:none;border-right:1px solid {{ t.border }};background:{{ t.surface }};padding:10px;display:flex;flex-direction:column;gap:2px">
+        <button onClick="{{ closeSettings }}" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:{{ t.text2 }};text-align:left" style-hover="background:{{ t.hover }}"><span>← Work items</span><span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:10.5px;border:1px solid {{ t.border }};border-radius:4px;padding:0 4px">Esc</span></button>
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }};padding:14px 10px 6px">Settings</div>
+        <sc-for list="{{ setNav }}" as="n" hint-placeholder-count="6"><button onClick="{{ n.go }}" style="text-align:left;height:30px;padding:0 10px;border:0;border-radius:6px;background:{{ n.bg }};color:{{ n.color }};cursor:pointer;font-weight:{{ n.weight }}" style-hover="background:{{ t.hover }}">{{ n.label }}</button></sc-for>
+      </div>
+      <div ref="{{ setRef }}" style="flex:1;min-width:0;overflow-y:auto;padding:28px 36px 80px">
+        <div style="max-width:760px;display:flex;flex-direction:column;gap:36px">
+
+          <section data-sec="connection" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">Azure DevOps connection</div><div style="font-size:12.5px;color:{{ t.text2 }}">Used to read work items, pull requests, builds and policies.</div></div>
+            <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px 20px;align-items:center">
+              <label style="color:{{ t.text2 }}">Organisation URL</label>
+              <input defaultValue="https://dev.azure.com/sheppard-digital" style="height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};font-family:'Geist Mono',monospace;font-size:12.5px;outline:none;box-sizing:border-box;width:100%">
+              <label style="color:{{ t.text2 }}">Projects</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1px solid {{ t.border2 }};border-radius:5px">Clinical Platform<span style="color:{{ t.text3 }}">×</span></span>
+                <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1px solid {{ t.border2 }};border-radius:5px">Patient Portal<span style="color:{{ t.text3 }}">×</span></span>
+                <span style="display:flex;align-items:center;height:26px;padding:0 8px;border:1px dashed {{ t.border2 }};border-radius:5px;color:{{ t.text2 }}">+ Add project</span>
+              </div>
+              <label style="color:{{ t.text2 }}">Personal access token</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="password" defaultValue="abcdefghijklmnopqrstuvwxyz0123456789" style="flex:1;height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};outline:none;box-sizing:border-box;min-width:0">
+                <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Replace</button>
+              </div>
+              <div></div>
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <button onClick="{{ testConn }}" style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Test connection</button>
+                <x-import component="StatusIcon" from="./status-icons.js" status="{{ conn.icon }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+                <span style="font-size:12.5px;color:{{ conn.color }}">{{ conn.text }}</span>
+              </div>
+            </div>
+          </section>
+
+          <section data-sec="watching" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">Watching</div><div style="font-size:12.5px;color:{{ t.text2 }}">What the list shows when the app opens.</div></div>
+            <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px 20px;align-items:center">
+              <label style="color:{{ t.text2 }}">Default person</label>
+              <div style="display:flex;align-items:center;justify-content:space-between;height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};max-width:280px"><span>Me (Shaun Sheppard)</span><span style="font-size:9px;color:{{ t.text3 }}">▼</span></div>
+              <label style="color:{{ t.text2 }}">Default sprint</label>
+              <div style="display:flex;align-items:center;justify-content:space-between;height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};max-width:280px"><span>Current sprint</span><span style="font-size:9px;color:{{ t.text3 }}">▼</span></div>
+              <label style="color:{{ t.text2 }}">Area paths</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;font-family:'Geist Mono',monospace;font-size:12px">
+                <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1px solid {{ t.border2 }};border-radius:5px">Clinical\Intake<span style="color:{{ t.text3 }}">×</span></span>
+                <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1px solid {{ t.border2 }};border-radius:5px">Clinical\Referrals<span style="color:{{ t.text3 }}">×</span></span>
+                <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 8px;border:1px solid {{ t.border2 }};border-radius:5px">Clinical\Scheduling<span style="color:{{ t.text3 }}">×</span></span>
+                <span style="display:flex;align-items:center;height:26px;padding:0 8px;border:1px dashed {{ t.border2 }};border-radius:5px;color:{{ t.text2 }};font-family:'Geist',sans-serif">+ Add</span>
+              </div>
+              <label style="color:{{ t.text2 }}">Work-item types</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ typeChips }}" as="c"><button onClick="{{ c.toggle }}" aria-pressed="{{ c.on }}" style="display:flex;align-items:center;gap:6px;height:26px;padding:0 9px;border:1px solid {{ c.border }};border-radius:5px;background:{{ c.bg }};cursor:pointer;color:{{ c.color }}"><span style="font-size:11px;width:10px">{{ c.mark }}</span>{{ c.label }}</button></sc-for>
+              </div>
+              <label style="color:{{ t.text2 }}">States that count as to do</label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <sc-for list="{{ stateChips }}" as="c"><button onClick="{{ c.toggle }}" aria-pressed="{{ c.on }}" style="display:flex;align-items:center;gap:6px;height:26px;padding:0 9px;border:1px solid {{ c.border }};border-radius:5px;background:{{ c.bg }};cursor:pointer;color:{{ c.color }}"><span style="font-size:11px;width:10px">{{ c.mark }}</span>{{ c.label }}</button></sc-for>
+              </div>
+            </div>
+          </section>
+
+          <section data-sec="repos" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">Repositories</div><div style="font-size:12.5px;color:{{ t.text2 }}">Each session gets its own worktree branched from the target branch.</div></div>
+            <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+              <div style="display:grid;grid-template-columns:1.1fr 1.5fr 0.7fr 28px;gap:12px;padding:8px 12px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }};border-bottom:1px solid {{ t.border }}"><span>Project / area path</span><span>Local repo path</span><span>Target branch</span><span></span></div>
+              <sc-for list="{{ repos }}" as="r"><div style="display:grid;grid-template-columns:1.1fr 1.5fr 0.7fr 28px;gap:12px;padding:8px 12px;align-items:center;font-family:'Geist Mono',monospace;font-size:12px;border-top:{{ r.borderTop }}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.area }}</span><span style="color:{{ t.text2 }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.path }}</span><span>{{ r.branch }}</span><span style="color:{{ t.text3 }};text-align:center">⋯</span></div></sc-for>
+            </div>
+            <div><button style="height:28px;padding:0 10px;border:1px dashed {{ t.border2 }};border-radius:6px;background:transparent;cursor:pointer;color:{{ t.text2 }}">+ Add mapping</button></div>
+          </section>
+
+          <section data-sec="sessions" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">Sessions</div><div style="font-size:12.5px;color:{{ t.text2 }}">When the limit is reached, Start session becomes Queue session.</div></div>
+            <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px 20px;align-items:center">
+              <label style="color:{{ t.text2 }}">Max concurrent sessions</label>
+              <div style="display:flex;align-items:center;gap:0;width:max-content;border:1px solid {{ t.border2 }};border-radius:6px;overflow:hidden"><button onClick="{{ limDown }}" style="width:30px;height:28px;border:0;background:{{ t.btn2 }};cursor:pointer">−</button><span style="width:40px;text-align:center;font-family:'Geist Mono',monospace;border-left:1px solid {{ t.border2 }};border-right:1px solid {{ t.border2 }};line-height:28px">{{ limit }}</span><button onClick="{{ limUp }}" style="width:30px;height:28px;border:0;background:{{ t.btn2 }};cursor:pointer">+</button></div>
+              <label style="color:{{ t.text2 }}">Default mode</label>
+              <div style="display:flex;border:1px solid {{ t.border }};border-radius:7px;padding:2px;gap:2px;width:max-content"><sc-for list="{{ modes }}" as="m"><button onClick="{{ m.pick }}" style="height:26px;padding:0 10px;border:0;border-radius:5px;background:{{ m.bg }};color:{{ m.color }};font-weight:500;cursor:pointer">{{ m.label }}</button></sc-for></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="color:{{ t.text2 }}">Implement prompt template</label><textarea defaultValue="{{ implTpl }}" rows="7" style="font-family:'Geist Mono',monospace;font-size:12px;line-height:1.6;background:{{ t.code }};border:1px solid {{ t.border2 }};border-radius:6px;padding:10px 12px;resize:vertical;color:{{ t.text }};outline:none"></textarea><span style="font-size:12px;color:{{ t.text3 }}">Variables: {id} {type} {title} {branch} {repo} {area} {target}</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><label style="color:{{ t.text2 }}">Review prompt template</label><textarea defaultValue="{{ reviewTpl }}" rows="5" style="font-family:'Geist Mono',monospace;font-size:12px;line-height:1.6;background:{{ t.code }};border:1px solid {{ t.border2 }};border-radius:6px;padding:10px 12px;resize:vertical;color:{{ t.text }};outline:none"></textarea></div>
+          </section>
+
+          <section data-sec="pr" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">PR monitoring</div><div style="font-size:12.5px;color:{{ t.text2 }}">Merging is never automatic, whatever these are set to.</div></div>
+            <div style="display:grid;grid-template-columns:180px minmax(0,1fr);gap:12px 20px;align-items:center">
+              <label style="color:{{ t.text2 }}">Polling interval</label>
+              <div style="display:flex;align-items:center;gap:8px"><input defaultValue="60" style="width:64px;height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};font-family:'Geist Mono',monospace;outline:none;box-sizing:border-box"><span style="color:{{ t.text2 }}">seconds</span></div>
+              <label style="color:{{ t.text2 }}">Max automatic fix attempts</label>
+              <div style="display:flex;align-items:center;gap:8px"><input defaultValue="3" style="width:64px;height:30px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};font-family:'Geist Mono',monospace;outline:none;box-sizing:border-box"><span style="color:{{ t.text2 }}">then mark as Stuck</span></div>
+              <label style="color:{{ t.text2 }}">Fix it requires a click</label>
+              <div style="display:flex;align-items:center;gap:10px"><button onClick="{{ tg.fixclick.toggle }}" role="switch" aria-checked="{{ tg.fixclick.on }}" style="width:32px;height:18px;border-radius:9px;border:1px solid {{ tg.fixclick.border }};background:{{ tg.fixclick.bg }};padding:0;position:relative;cursor:pointer"><span style="position:absolute;top:2px;left:{{ tg.fixclick.x }};width:12px;height:12px;border-radius:50%;background:{{ tg.fixclick.knob }}"></span></button><span style="color:{{ t.text2 }};font-size:12.5px">{{ tg.fixclick.text }}</span></div>
+            </div>
+          </section>
+
+          <section data-sec="notify" style="display:flex;flex-direction:column;gap:14px">
+            <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:15px;font-weight:600">Notifications</div><div style="font-size:12.5px;color:{{ t.text2 }}">Desktop notifications. In-app toasts always show.</div></div>
+            <div style="display:flex;flex-direction:column;border:1px solid {{ t.border }};border-radius:8px;background:{{ t.surface }}">
+              <sc-for list="{{ notifs }}" as="n"><div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:{{ n.borderTop }}"><x-import component="StatusIcon" from="./status-icons.js" status="{{ n.icon }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import><span style="flex:1">{{ n.label }}</span><button onClick="{{ n.toggle }}" role="switch" aria-checked="{{ n.on }}" style="width:32px;height:18px;border-radius:9px;border:1px solid {{ n.border }};background:{{ n.bg }};padding:0;position:relative;cursor:pointer"><span style="position:absolute;top:2px;left:{{ n.x }};width:12px;height:12px;border-radius:50%;background:{{ n.knob }}"></span></button></div></sc-for>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showFirstRun }}">
+    <div style="flex:1;min-height:0;display:grid;place-items:center;padding:32px;overflow:auto">
+      <div style="width:min(520px,100%);display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:{{ t.text3 }}">Step 1 of 2</span>
+          <span style="font-size:20px;font-weight:600;letter-spacing:-0.01em">Connect to Azure DevOps</span>
+          <span style="color:{{ t.text2 }};text-wrap:pretty;line-height:1.55">Agent Launcher reads your work items and pull requests. It needs your organisation URL and a personal access token. Nothing is written to DevOps except the PRs Claude opens.</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="color:{{ t.text2 }}">Organisation URL</span><input placeholder="https://dev.azure.com/your-org" style="height:34px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};font-family:'Geist Mono',monospace;font-size:12.5px;outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="color:{{ t.text2 }}">Project</span><input placeholder="Clinical Platform" style="height:34px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};outline:none"></label>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="color:{{ t.text2 }}">Personal access token</span><input type="password" placeholder="Paste token" style="height:34px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};color:{{ t.text }};outline:none"><span style="font-size:12px;color:{{ t.text3 }}">Scopes: Work Items (Read) · Code (Read &amp; write) · Build (Read) · Pull request threads (Read)</span></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button onClick="{{ testConn }}" style="height:34px;padding:0 14px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};cursor:pointer;font-weight:500;white-space:nowrap">Test connection</button>
+          <sc-if value="{{ conn.show }}"><x-import component="StatusIcon" from="./status-icons.js" status="{{ conn.icon }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import><span style="font-size:12.5px;color:{{ conn.color }}">{{ conn.text }}</span></sc-if>
+          <div style="flex:1"></div>
+          <button onClick="{{ finishSetup }}" disabled="{{ conn.notOk }}" style="height:34px;padding:0 16px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;cursor:pointer;opacity:{{ conn.btnOpacity }}">Continue</button>
+        </div>
+        <div style="border-top:1px solid {{ t.border }};padding-top:14px;font-size:12.5px;color:{{ t.text3 }}">Next: map projects and area paths to local repositories.</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:40;width:340px;pointer-events:none">
+    <sc-for list="{{ toasts }}" as="x">
+      <div role="status" style="pointer-events:auto;display:flex;gap:10px;align-items:flex-start;padding:10px 10px 10px 12px;border:1px solid {{ x.border }};border-radius:8px;background:{{ t.raised }}">
+        <div style="padding-top:1px"><x-import component="StatusIcon" from="./status-icons.js" status="{{ x.status }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ x.title }}</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ x.text }}</span></div>
+        <button onClick="{{ x.view }}" style="height:26px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:5px;background:{{ t.btn2 }};cursor:pointer;font-weight:500">View</button>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;comfortable&quot;],&quot;default&quot;:&quot;compact&quot;,&quot;tsType&quot;:&quot;'compact'|'comfortable'&quot;,&quot;section&quot;:&quot;Display&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;busy&quot;,&quot;empty&quot;,&quot;firstrun&quot;,&quot;syncerror&quot;],&quot;default&quot;:&quot;busy&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;State&quot;},&quot;sessionLimit&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:1,&quot;max&quot;:12,&quot;default&quot;:6,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;State&quot;},&quot;live&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;State&quot;},&quot;selected&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number|'none'&quot;},&quot;view&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;'main'|'settings'&quot;},&quot;flash&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;embedded&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const T = {
+  dark: { bg:'#0e0f11', surface:'#141518', raised:'#1b1d21', hover:'#1e2025', sel:'#272a33', border:'#25272c', border2:'#363940', text:'#e7e8eb', text2:'#a6a9b0', text3:'#8a8e97', run:'#63a4f4', att:'#f0b043', fail:'#f2706a', pass:'#4fc48a', merge:'#a98bf5', runBg:'rgba(99,164,244,0.10)', attBg:'rgba(240,176,67,0.08)', attBg2:'rgba(240,176,67,0.22)', attHover:'rgba(240,176,67,0.13)', failBg:'rgba(242,112,106,0.09)', passBg:'rgba(79,196,138,0.09)', mergeBg:'rgba(169,139,245,0.10)', muteBg:'rgba(255,255,255,0.06)', btn:'#e7e8eb', btnText:'#0e0f11', btn2:'#1f2126', code:'#0b0c0e', input:'#0e0f11' },
+  light: { bg:'#f1f2f4', surface:'#ffffff', raised:'#ffffff', hover:'#f2f3f5', sel:'#e3e7ef', border:'#e1e3e7', border2:'#cdd0d6', text:'#16171a', text2:'#4b4f57', text3:'#666a73', run:'#1d6fd6', att:'#9a5c00', fail:'#c9302c', pass:'#1a7f4e', merge:'#7146d6', runBg:'rgba(29,111,214,0.07)', attBg:'rgba(214,140,20,0.10)', attBg2:'rgba(214,140,20,0.26)', attHover:'rgba(214,140,20,0.16)', failBg:'rgba(201,48,44,0.07)', passBg:'rgba(26,127,78,0.08)', mergeBg:'rgba(113,70,214,0.07)', muteBg:'rgba(0,0,0,0.05)', btn:'#16171a', btnText:'#ffffff', btn2:'#ffffff', code:'#f7f8f9', input:'#ffffff' }
+};
+const SM = { not_started:['Not started','text3','muteBg'], queued:['Queued','text2','muteBg'], running:['Running','run','runBg'], needs_input:['Needs input','att','attBg'], pr_checks:['PR checks running','run','runBg'], pr_failed:['PR failed','fail','failBg'], fixing:['Fixing','run','runBg'], ready:['Ready to merge','pass','passBg'], stuck:['Stuck','fail','failBg'], merged:['Merged','merge','mergeBg'], cancelled:['Cancelled','text3','muteBg'] };
+const GROUP = { needs_input:'attention', pr_failed:'attention', stuck:'attention', ready:'attention', running:'active', queued:'active', pr_checks:'active', fixing:'active', not_started:'todo', merged:'done', cancelled:'done' };
+const RANK = { needs_input:0, pr_failed:1, stuck:2, ready:3, running:0, fixing:1, pr_checks:2, queued:3, not_started:0, merged:0, cancelled:1 };
+const GL = { attention:'Needs attention', active:'Active sessions', todo:'Not started', done:'Completed' };
+const TYPES = { task:'Task', bug:'Bug', story:'User story' };
+const SESSION = s => s === 'running' || s === 'needs_input' || s === 'fixing';
+const HAS_PR = s => ['pr_checks','pr_failed','fixing','ready','stuck','merged'].includes(s);
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').split('-').filter(Boolean).slice(0,4).join('-');
+const fmt = sec => { sec = Math.max(0, Math.floor(sec)); const h = Math.floor(sec/3600), m = Math.floor(sec%3600/60), s = sec%60; return (h ? h+':'+String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0'); };
+const ago = m => m < 1 ? 'now' : m < 60 ? m+'m' : m < 1440 ? Math.floor(m/60)+'h' : Math.floor(m/1440)+'d';
+const now = () => { const d = new Date(); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2,'0')).join(':'); };
+const PASS5 = (b) => [['passed','Build validation', b || 'Succeeded · 6m 04s · 412 tests'],['passed','Automated review','Approved · 0 open comments'],['passed','Merge conflicts','No conflicts with main'],['passed','Linked work items','1 linked item'],['passed','Comment resolution','All comments resolved']];
+const IMPL_TPL = 'Work on Azure DevOps {type} #{id}: "{title}".\n\nRead the work item, its description and acceptance criteria. Write a step list before you start and keep it updated as you go.\nWork on branch {branch} from {target} in {repo}.\nRun the full test suite before committing. When done, commit, push and open a PR linked to #{id}.\nAsk before running database migrations or editing files outside {area}.';
+const REVIEW_TPL = 'Review the changes for Azure DevOps {type} #{id}: "{title}".\n\nCheck the implementation against every acceptance criterion. Run the tests.\nDo not change code. Post findings as PR comments with file and line, then summarise.';
+
+function seed() { return [
+  { id:4512, type:'task', title:'Add NHS number validation to patient intake form', status:'needs_input', ago:1, state:'Active', area:'Clinical\\Intake', mode:'Implement', branch:'agent/4512-nhs-number-validation', elapsed:1140, stepSec:131, diff:'+186 −12 · 7 files', reason:'Asks to run dotnet ef database update',
+    question:{ kind:'Permission · Bash', title:'Claude wants to run a command', text:'I\'ve generated migration 20261009_AddNhsNumber. May I apply it to your local dev database?', cmd:'dotnet ef database update --project src/Intake.Data --connection "Server=localhost;Database=Intake_Dev"' },
+    steps:[['done','Read work item and acceptance criteria','0:24'],['done','Locate validation in PatientIntake.Web','1:02'],['done','Add NhsNumber value object with Modulus 11 check','4:18'],['done','Unit tests for valid and invalid numbers','3:40'],['needs_input','Add migration for nhs_number column','2:11',['Migration generated: 20261009_AddNhsNumber','Waiting for permission to apply it']],['pending','Wire validation into intake API endpoint'],['pending','Update form error messages'],['pending','Run full test suite']],
+    log:[['14:31:40','Edit','src/Intake.Data/IntakeDbContext.cs','+6 −1'],['14:31:52','Bash','dotnet ef migrations add AddNhsNumber',['Build started...','Build succeeded.','Done. To undo this action, use \'ef migrations remove\'']],['14:32:05','Read','src/Intake.Data/Migrations/20261009_AddNhsNumber.cs','48 lines'],['14:32:11','Ask','Permission: dotnet ef database update','waiting']] },
+  { id:4498, type:'bug', title:'Appointment reminders send twice when clocks change', status:'pr_failed', ago:4, state:'Resolved', area:'Clinical\\Scheduling', mode:'Implement', branch:'agent/4498-appointment-reminders-dst', diff:'+92 −31 · 4 files', reason:'2 tests failed · 3 review comments',
+    pr:{ n:1287, title:'Send appointment reminders once across DST change', target:'main', attempt:0, max:3,
+      checks:[['failed','Build validation','2 tests failed in PatientService.Tests',{ log:['  Failed ReminderSchedulerTests.Schedules_once_when_clocks_go_back [42 ms]','  Error Message:','   Expected reminders.Count to be 1, but found 2.','   at ReminderSchedulerTests.cs:line 88','  Failed ReminderSchedulerTests.Uses_clinic_zone_for_send_window [11 ms]','  Error Message:','   Expected sendAt 09:00 Europe/London, but found 10:00.','','Failed!  - Failed: 2, Passed: 214, Skipped: 1, Total: 217'] }],
+        ['failed','Automated review','3 unresolved review comments',{ comments:[['src/Reminders/ReminderScheduler.cs',57,'Converting with TimeZoneInfo.Local ties this to the server\'s timezone. Use the clinic\'s configured zone.'],['src/Reminders/ReminderScheduler.cs',63,'The de-duplication key ignores the UTC offset, so two instants with the same wall-clock time collide.'],['tests/Reminders/ReminderSchedulerTests.cs',12,'Freeze the clock with FakeTimeProvider instead of DateTime.UtcNow.']] }],
+        ['passed','Merge conflicts','No conflicts with main'],['passed','Linked work items','1 linked item'],['failed','Comment resolution','3 active comments']],
+      history:[['done','Original session','Today 13:20','9 steps · 28m · PR opened']] } },
+  { id:4471, type:'story', title:'Export clinic schedule as an iCal feed', status:'stuck', ago:38, state:'Resolved', area:'Clinical\\Scheduling', mode:'Implement', branch:'agent/4471-export-clinic-schedule-ical', diff:'+340 −8 · 9 files', reason:'3 of 3 fix attempts failed',
+    pr:{ n:1279, title:'Export clinic schedule as iCal feed', target:'main', attempt:3, max:3,
+      checks:[['failed','Build validation','Snapshot mismatch in IcsSerializerTests',{ log:['  Failed IcsSerializerTests.Serializes_weekly_clinic [8 ms]','  Error Message:','   Snapshot mismatch at line 7','   - DTSTAMP:20261009T095500Z','   + DTSTAMP:20261009T105500Z','','Failed!  - Failed: 1, Passed: 88, Skipped: 0, Total: 89'] }],['passed','Automated review','No open comments'],['passed','Merge conflicts','No conflicts with main'],['passed','Linked work items','1 linked item'],['passed','Comment resolution','All comments resolved']],
+      history:[['failed','Fix attempt 3','10:52','Snapshot still differs on the DTSTAMP line'],['failed','Fix attempt 2','10:21','Regenerated snapshot; failed on line endings'],['failed','Fix attempt 1','09:47','Fixed VTIMEZONE block; 1 test still failing'],['done','Original session','09:02','11 steps · 41m · PR opened']] } },
+  { id:4460, type:'story', title:'Show allergy warnings on the prescription screen', status:'ready', ago:12, state:'Resolved', area:'Clinical\\Prescribing', mode:'Implement', branch:'agent/4460-allergy-warnings-prescription', diff:'+211 −40 · 8 files', reason:'All 5 checks passed',
+    pr:{ n:1281, title:'Show allergy warnings on prescription screen', target:'main', attempt:1, max:3, checks:PASS5(), history:[['done','Fix attempt 1','Today 11:40','Addressed 1 review comment · build passed'],['done','Original session','Today 10:05','8 steps · 33m · PR opened']] } },
+  { id:4520, type:'task', title:'Move PatientService to .NET 9 minimal hosting', status:'running', ago:0, state:'Active', area:'Clinical\\Core', mode:'Implement', branch:'agent/4520-patientservice-net9-hosting', elapsed:1394, stepSec:154, diff:'+214 −96 · 11 files',
+    steps:[['done','Read work item and acceptance criteria','0:18'],['done','Inventory Startup.cs registrations','2:05'],['done','Move service registrations to Program.cs','6:42'],['done','Replace IHostedService wiring','3:10'],['running','Update integration test factory','',['Replacing CustomWebApplicationFactory<Startup> with WebApplicationFactory<Program>','12 test classes reference Startup — 7 updated']],['pending','Remove Startup.cs and obsolete packages'],['pending','Run full test suite and fix regressions']],
+    log:[['14:21:03','Read','tests/PatientService.IntegrationTests/ApiFactory.cs','92 lines'],['14:21:09','Edit','tests/PatientService.IntegrationTests/ApiFactory.cs','+14 −22'],['14:21:40','Bash','dotnet build tests/PatientService.IntegrationTests',['Build succeeded.','    0 Warning(s)','    0 Error(s)','Time Elapsed 00:00:18.42']],['14:22:02','Bash','dotnet test --filter Category=Api',['Passed!  - Failed: 0, Passed: 38, Skipped: 0, Total: 38']],['14:22:15','Think','Api tests pass. Checking for remaining Startup references.',''],['14:22:18','Grep','"Startup" in tests/**','5 matches · 5 files'],['14:22:31','Edit','tests/PatientService.IntegrationTests/AppointmentsTests.cs','+2 −2']] },
+  { id:4489, type:'bug', title:'Referral priority ignores triage rule overrides', status:'fixing', ago:2, state:'Resolved', area:'Clinical\\Referrals', mode:'Implement', branch:'agent/4489-referral-priority-triage', elapsed:220, diff:'+58 −14 · 3 files', reason:'Fix attempt 2 of 3',
+    pr:{ n:1284, title:'Validate referral priority against triage rules', target:'main', attempt:2, max:3,
+      checks:[['failed','Build validation','1 test failed in Referrals.Tests (last run)'],['pending','Automated review','Waits for build'],['passed','Merge conflicts','No conflicts with main'],['passed','Linked work items','1 linked item'],['passed','Comment resolution','All comments resolved']],
+      fixSteps:[['done','Read failing test output','0:31'],['done','Map Urgent-2WW override to priority 1','2:02'],['running','Re-run Referrals.Tests','0:48'],['pending','Commit and push to branch']],
+      history:[['failed','Fix attempt 1','13:58','Build failed · 1 test still failing'],['done','Original session','13:05','7 steps · 31m · PR opened']] } },
+  { id:4507, type:'story', title:'Audit log for prescription edits', status:'running', ago:1, state:'Active', area:'Clinical\\Prescribing', mode:'Implement', branch:'agent/4507-audit-log-prescription-edits', elapsed:501, stepSec:96, diff:'+73 −0 · 3 files',
+    steps:[['done','Read work item and acceptance criteria','0:21'],['done','Find prescription update paths','2:44'],['running','Add PrescriptionAuditEntry entity','',['Creating entity and EF configuration']],['pending','Write SaveChanges audit interceptor'],['pending','Add tests'],['pending','Run full test suite']],
+    log:[['14:24:10','Grep','"UpdatePrescription" in src/**','6 matches · 3 files'],['14:24:30','Read','src/Prescribing/PrescriptionService.cs','214 lines'],['14:25:02','Write','src/Prescribing.Data/PrescriptionAuditEntry.cs','+41']] },
+  { id:4515, type:'task', title:'Review: referral triage rules engine', status:'running', ago:3, state:'Active', area:'Clinical\\Referrals', mode:'Review', branch:'agent/4515-review-triage-rules', elapsed:312, stepSec:80, diff:'no changes · review only',
+    steps:[['done','Read PR !1276 and work item','0:40'],['done','Check rules against acceptance criteria','2:12'],['running','Run triage scenario tests','',['14 of 22 scenarios run']],['pending','Write review summary'],['pending','Post review comments']],
+    log:[['14:26:12','Bash','dotnet test --filter Triage',['Running 22 scenarios...']]] },
+  { id:4493, type:'task', title:'Paginate referral search results', status:'pr_checks', ago:3, state:'Resolved', area:'Clinical\\Referrals', mode:'Implement', branch:'agent/4493-paginate-referral-search', diff:'+120 −35 · 5 files', reason:'Build running',
+    pr:{ n:1290, title:'Paginate referral search results', target:'main', attempt:0, max:3, checks:[['running','Build validation','Running · 3m 12s'],['pending','Automated review','Starts after the build passes'],['passed','Merge conflicts','No conflicts with main'],['passed','Linked work items','1 linked item'],['pending','Comment resolution','No comments yet']], history:[['done','Original session','Today 14:02','6 steps · 19m · PR opened']] } },
+  { id:4530, type:'story', title:'Look up GP practice details from the ODS API', status:'not_started', ago:180, state:'New', area:'Clinical\\Intake',
+    desc:['When a receptionist enters an ODS code on the intake form, we should fetch the practice name, address and phone number from the NHS ODS API rather than asking them to type it.','Results should be cached for 24 hours. If the API is unavailable, the form falls back to manual entry with a warning.'],
+    ac:['Entering a valid ODS code fills practice name, address and phone within 1 second (cached) or 3 seconds (uncached).','An unknown code shows "No practice found" and keeps fields editable.','API failures log a warning and fall back to manual entry; the form never blocks.','Lookups are cached per code for 24 hours.','Unit tests cover found, not found and API-down cases.'] },
+  { id:4531, type:'task', title:'Rate-limit the public booking endpoint', status:'not_started', ago:300, state:'New', area:'Clinical\\Scheduling', desc:['Add per-IP rate limiting to POST /api/public/bookings using the built-in ASP.NET Core rate limiter.'], ac:['More than 10 requests per minute from one IP returns 429 with Retry-After.','Limits are configurable in appsettings.'] },
+  { id:4534, type:'bug', title:'Discharge letter shows times in UTC', status:'not_started', ago:1440, state:'Approved', area:'Clinical\\Core', desc:['Discharge letters print admission and discharge times in UTC. They should use Europe/London.'], ac:['Times on the letter match the ward\'s local time, including during BST.'] },
+  { id:4536, type:'task', title:'Health check for the SMS gateway', status:'not_started', ago:2880, state:'New', area:'Clinical\\Scheduling', desc:['Expose the SMS gateway status on /health so on-call can see when reminders will not send.'], ac:['/health reports Degraded when the gateway fails two consecutive pings.'] },
+  { id:4440, type:'task', title:'Add audit fields to Appointment entity', status:'merged', ago:130, state:'Closed', area:'Clinical\\Scheduling', mode:'Implement', branch:'agent/4440-audit-fields-appointment', diff:'+64 −2 · 4 files', pr:{ n:1270, title:'Add audit fields to Appointment entity', target:'main', checks:PASS5(), history:[['done','Original session','Today 11:10','6 steps · 17m · PR opened']] } },
+  { id:4433, type:'bug', title:'Null reference on empty referral notes', status:'merged', ago:1500, state:'Closed', area:'Clinical\\Referrals', mode:'Implement', branch:'agent/4433-null-referral-notes', diff:'+9 −3 · 2 files', pr:{ n:1262, title:'Handle empty referral notes', target:'main', checks:PASS5(), history:[['done','Original session','Yesterday','4 steps · 9m · PR opened']] } },
+  { id:4419, type:'story', title:'Spike: FHIR R5 Patient resource mapping', status:'cancelled', ago:2900, state:'Active', area:'Clinical\\Core', mode:'Implement', branch:'agent/4419-fhir-r5-patient-mapping', elapsed:0, diff:'+30 −0 · 2 files',
+    steps:[['done','Read work item and acceptance criteria','0:30'],['done','Survey existing Patient DTOs','3:12'],['skipped','Draft R5 mapping profile'],['skipped','Write mapping tests']], log:[['09:12:40','Stop','Session stopped by you','']] }
+]; }
+
+class Component extends DCLogic {
+  rootRef = React.createRef(); searchRef = React.createRef(); primaryRef = React.createRef(); setRef = React.createRef();
+  state = this.init();
+  init() {
+    const p = this.props || {}; const sc = p.scenario || 'busy';
+    const sel = p.selected == null ? (sc === 'empty' ? null : 4520) : (p.selected === 'none' ? null : Number(p.selected));
+    return { items: seed(), sel, view: p.view || 'main', mode: 'Implement', promptOpen: p.promptOpen === true || p.promptOpen === 'true', promptEdits: {}, logOpen: true, open: {}, groupsOpen: { attention:true, active:true, todo:true, done: [4440,4433,4419].includes(sel) }, filter: null, q: '', sprint: 'Sprint 42', person: sc === 'empty' ? 'Priya Shah' : 'Me', popover: null, popQ: '', synced: 40, syncing: false, flash: p.flash ? Number(p.flash) : null, toasts: [], kbd: false, reply: '', setSec: 'connection', conn: sc === 'firstrun' ? null : 'ok', setupDone: false, limit: null, types: { Bug:true, Task:true, 'User story':true, Feature:false }, states: { New:true, Approved:true, Committed:true, Active:true, Resolved:false }, tg: { fixclick:true, ninput:true, prfail:true, ready:true }, narrow: false, simDone: false };
+  }
+  get live() { const l = this.props.live; return l !== false && l !== 'false'; }
+  get scenario() { return this.props.scenario || 'busy'; }
+  limitVal() { return this.state.limit ?? Number(this.props.sessionLimit ?? 6); }
+  componentDidMount() {
+    const el = this.rootRef.current;
+    if (el && window.ResizeObserver) { this.ro = new ResizeObserver(([e]) => { const n = e.contentRect.width < 1280; if (n !== this.state.narrow) this.setState({ narrow: n }); }); this.ro.observe(el); }
+    if (this.live) {
+      this.iv = setInterval(() => this.tickLive(), 1000);
+      this.kd = ev => this.onKey(ev); window.addEventListener('keydown', this.kd);
+    }
+  }
+  componentWillUnmount() { clearInterval(this.iv); this.ro && this.ro.disconnect(); this.kd && window.removeEventListener('keydown', this.kd); (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { (this.timers = this.timers || []).push(setTimeout(fn, ms)); }
+  tickLive() {
+    this.setState(s => {
+      const items = s.items.map(it => it.status === 'running' || it.status === 'fixing' ? { ...it, elapsed: (it.elapsed || 0) + 1, stepSec: (it.stepSec || 0) + 1 } : it);
+      return { items, synced: this.scenario === 'syncerror' ? s.synced : (s.synced >= 60 ? 0 : s.synced + 1), tickN: (s.tickN || 0) + 1 };
+    }, () => { if (!this.state.simDone && this.state.tickN === 10 && this.scenario === 'busy') this.simEvent(); });
+  }
+  simEvent() {
+    this.setState({ simDone: true });
+    this.upd(4507, x => { x.status = 'needs_input'; x.ago = 0; x.reason = 'Asks to edit a file outside its area'; x.steps = x.steps.map(s => s[0] === 'running' ? ['needs_input', s[1], '1:36', ['Needs to add a DbSet to the shared context']] : s);
+      x.question = { kind:'Permission · Edit', title:'Claude wants to edit a shared file', text:'To register the audit entity I need to add a DbSet to ClinicalDbContext, which sits outside Clinical\\Prescribing. OK to edit it?', cmd:'Edit src/Clinical.Data/ClinicalDbContext.cs  (+2 lines)' };
+      x.log = [...x.log, [now(), 'Ask', 'Permission: edit ClinicalDbContext.cs', 'waiting']]; return x; });
+    this.flashRow(4507); this.toast('needs_input', '4507 needs input', 'Claude wants to edit ClinicalDbContext.cs', 4507);
+  }
+  flashRow(id) { this.setState({ flash: id }); this.later(() => this.setState(s => s.flash === id ? { flash: null } : null), 2400); }
+  toast(status, title, text, id) { const k = Date.now() + Math.random(); this.setState(s => ({ toasts: [...s.toasts, { k, status, title, text, id }] })); this.later(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.k !== k) })), 6000); }
+  upd(id, fn) { this.setState(s => ({ items: s.items.map(it => it.id === id ? fn({ ...it, pr: it.pr ? { ...it.pr } : it.pr }) : it) })); }
+  cur() { return this.state.items.find(i => i.id === this.state.sel); }
+  tog(k, def) { this.setState(s => ({ open: { ...s.open, [k]: !(s.open[k] ?? def) } })); }
+  onKey(ev) {
+    const tag = ev.target && ev.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') { if (ev.key === 'Escape') ev.target.blur(); if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey) && this.cur()?.status === 'needs_input') this.approve(); return; }
+    const ids = this.visibleIds || [];
+    if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); let i = ids.indexOf(this.state.sel); i = ev.key === 'ArrowDown' ? Math.min(ids.length - 1, i + 1) : Math.max(0, i < 0 ? 0 : i - 1); if (ids[i]) this.setState({ sel: ids[i], kbd: true }); }
+    else if (ev.key === 'n' || ev.key === 'N') { const a = this.attIds || []; if (!a.length) return; const i = a.indexOf(this.state.sel); this.setState({ sel: a[(i + 1) % a.length], kbd: true, view: 'main' }); }
+    else if (ev.key === '/') { ev.preventDefault(); this.searchRef.current && this.searchRef.current.focus(); }
+    else if (ev.key === 'Enter') { this.primaryRef.current && this.primaryRef.current.focus(); }
+    else if (ev.key === 'Escape') this.setState({ view: 'main', popover: null });
+  }
+  activeCount() { return this.state.items.filter(i => SESSION(i.status)).length; }
+
+  start = () => {
+    const it = this.cur(); if (!it) return; const full = this.activeCount() >= this.limitVal(); const mode = this.state.mode;
+    this.upd(it.id, x => { x.status = full ? 'queued' : 'running'; x.ago = 0; x.mode = mode; x.branch = 'agent/' + x.id + '-' + slug(x.title); x.elapsed = 0; x.stepSec = 0; x.diff = 'no changes yet';
+      x.steps = [['done','Read work item and acceptance criteria','0:12'],['running','Plan approach and write step list','',['Locating relevant code']],['pending','Implement changes'],['pending','Write and update tests'],['pending','Run full test suite'],['pending','Commit, push and open PR']];
+      x.log = [[now(),'Read','work item #' + x.id,'1 item'],[now(),'Think','Reading acceptance criteria and locating relevant code.','']]; return x; });
+    this.flashRow(it.id);
+  };
+  approve = () => { const it = this.cur(); if (!it) return; const r = this.state.reply; this.upd(it.id, x => { x.status = 'running'; x.reason = null; x.question = null; x.steps = x.steps.map(s => s[0] === 'needs_input' ? ['running', s[1], '', ['Approved' + (r ? ' — "' + r + '"' : '') + ', continuing']] : s); x.log = [...x.log, [now(),'Ask','Approved by you' + (r ? ': ' + r : ''),'']]; return x; }); this.setState({ reply: '' }); };
+  deny = () => { const it = this.cur(); if (!it) return; this.upd(it.id, x => { x.status = 'running'; x.reason = null; x.question = null; x.steps = x.steps.map(s => s[0] === 'needs_input' ? ['running', s[1], '', ['Denied — Claude is finding another approach']] : s); x.log = [...x.log, [now(),'Ask','Denied by you','']]; return x; }); };
+  stop = () => { const it = this.cur(); if (!it) return; this.upd(it.id, x => { if (x.status === 'fixing') { x.status = 'pr_failed'; return x; } x.status = 'cancelled'; x.steps = (x.steps || []).map(s => s[0] === 'done' ? s : ['skipped', s[1]]); return x; }); };
+  fixIt = () => { const it = this.cur(); if (!it) return; this.upd(it.id, x => { x.status = 'fixing'; x.elapsed = 0; x.pr.attempt = (x.pr.attempt || 0) + 1; x.reason = 'Fix attempt ' + x.pr.attempt + ' of ' + x.pr.max; x.pr.fixSteps = [['running','Read failing checks and review comments','',[]],['pending','Apply fixes'],['pending','Re-run tests'],['pending','Commit and push to branch']]; return x; }); this.flashRow(it.id); };
+  merge = () => { const it = this.cur(); if (!it) return; this.upd(it.id, x => { x.status = 'merged'; x.ago = 0; return x; }); this.toast('merged', '!' + it.pr.n + ' merged', it.title, it.id); };
+  manual = () => { const it = this.cur(); if (it) this.toast('running', 'Manual session opened', 'Terminal opened in ' + it.branch, it.id); };
+  cancelQueue = () => { const it = this.cur(); if (it) this.upd(it.id, x => { x.status = 'not_started'; return x; }); };
+  restart = () => { const it = this.cur(); if (it) { this.upd(it.id, x => { x.status = 'not_started'; return x; }); } };
+
+  renderVals() {
+    const theme = this.props.theme === 'light' ? 'light' : 'dark';
+    const t = T[theme]; const st = this.state; const sc = this.scenario; const narrow = st.narrow;
+    const comfy = this.props.density === 'comfortable'; const limit = this.limitVal();
+    const firstRun = sc === 'firstrun' && !st.setupDone; const syncError = sc === 'syncerror';
+    const filterOut = (st.person !== 'Me' && st.person !== 'Everyone') || st.sprint !== 'Sprint 42';
+    let vis = filterOut || firstRun ? [] : st.items;
+    if (st.q) { const q = st.q.toLowerCase(); vis = vis.filter(it => (it.id + ' ' + it.title).toLowerCase().includes(q)); }
+    const F = { attention: it => GROUP[it.status] === 'attention', running: it => SESSION(it.status), pr: it => HAS_PR(it.status) && it.status !== 'merged', done: it => GROUP[it.status] === 'done' };
+    const counts = {}; Object.keys(F).forEach(k => counts[k] = vis.filter(F[k]).length);
+    if (st.filter) vis = vis.filter(F[st.filter]);
+    const setF = k => () => this.setState(s => ({ filter: s.filter === k ? null : k }));
+
+    const mkRow = it => {
+      const [label, tk] = SM[it.status]; const sel = it.id === st.sel; const att = GROUP[it.status] === 'attention'; const flash = st.flash === it.id; const done = GROUP[it.status] === 'done';
+      const steps = it.steps || []; const nd = steps.filter(s => s[0] === 'done').length;
+      const hasProg = (it.status === 'running') && steps.length > 0;
+      return { id: it.id, type: it.type, title: it.title, status: it.status, sel, label, labelColor: t[tk], labelWeight: att ? 600 : 500,
+        weight: att ? 600 : 450, titleColor: done ? t.text2 : t.text,
+        bg: flash ? t.attBg2 : sel ? t.sel : att ? t.attBg : 'transparent', hoverBg: sel ? t.sel : att ? t.attHover : t.hover,
+        outline: sel && st.kbd ? '2px solid ' + t.run : flash ? '1px solid ' + t.att : 'none',
+        hasProg, segs: steps.map(s => ({ bg: s[0] === 'done' ? t.text2 : s[0] === 'running' ? t.run : t.border2 })), barW: Math.min(70, steps.length * 10) + 'px', progText: nd + '/' + steps.length,
+        hasReason: !!it.reason && !hasProg && !narrow || (!!it.reason && att), reason: it.reason, hasPr: !!it.pr, pr: it.pr && it.pr.n, ago: ago(it.ago),
+        select: () => this.setState({ sel: it.id, kbd: false, popover: null }) };
+    };
+    const groups = ['attention','active','todo','done'].map(k => {
+      const list = vis.filter(it => GROUP[it.status] === k).sort((a, b) => (RANK[a.status] - RANK[b.status]) || (a.ago - b.ago));
+      const open = st.groupsOpen[k];
+      return { key: k, label: GL[k], count: list.length, open, show: list.length > 0, chev: open ? '▼' : '▶', rows: list.map(mkRow), labelColor: k === 'attention' ? t.att : t.text3,
+        toggle: () => this.setState(s => ({ groupsOpen: { ...s.groupsOpen, [k]: !s.groupsOpen[k] } })) };
+    });
+    this.visibleIds = groups.filter(g => g.open).flatMap(g => g.rows.map(r => r.id));
+    const attItems = groups[0].rows; this.attIds = attItems.map(r => r.id);
+
+    const it = !filterOut && !firstRun ? st.items.find(x => x.id === st.sel) : null;
+    let d = null;
+    if (it) {
+      const s = it.status; const [label, tk, bk] = SM[s]; const steps = it.steps || []; const nd = steps.filter(x => x[0] === 'done').length;
+      const bt = i => i ? '1px solid ' + t.border : 'none';
+      const stepVM = (x, i, pre) => { const k = pre + i; const def = x[0] === 'running' || x[0] === 'needs_input'; const open = !!x[3] && (st.open[k] ?? def);
+        return { n: i + 1, icon: x[0], text: x[1], time: x[0] === 'running' ? fmt(it.stepSec || 0) : (x[2] || ''), color: x[0] === 'pending' || x[0] === 'skipped' ? t.text3 : t.text, weight: def ? 600 : 400, bg: x[0] === 'running' ? t.runBg : x[0] === 'needs_input' ? t.attBg : 'transparent', borderTop: bt(i), hasDetail: !!x[3], open, cursor: x[3] ? 'pointer' : 'default', chev: x[3] ? (open ? '▼' : '▶') : '', detail: (x[3] || []).map(l => ({ l })), toggle: () => x[3] && this.tog(k, def) }; };
+      const pr = it.pr || {}; const checks = (pr.checks || []).map((c, i) => { const k = 'c' + i; const ex = c[3]; const open = !!ex && (st.open[k] ?? c[0] === 'failed');
+        return { icon: c[0], name: c[1], result: c[2], resultColor: c[0] === 'failed' ? t.fail : t.text2, borderTop: bt(i), expandable: !!ex, open, chev: open ? 'Hide' : 'Details', toggle: () => this.tog(k, c[0] === 'failed'),
+          isLog: !!(ex && ex.log), logLines: ex && ex.log ? ex.log.map(l => ({ l: l || ' ', color: /Failed|Error|Expected|^\s+[-+] /.test(l) ? t.fail : t.text2 })) : [],
+          isComments: !!(ex && ex.comments), comments: ex && ex.comments ? ex.comments.map(m => ({ loc: m[0] + ':' + m[1], text: m[2] })) : [] }; });
+      const failed = (pr.checks || []).filter(c => c[0] === 'failed'); const passed = (pr.checks || []).filter(c => c[0] === 'passed').length;
+      d = { id: it.id, type: it.type, typeLabel: TYPES[it.type], title: it.title, status: s, label, badgeColor: t[tk], badgeBg: t[bk], state: it.state, area: it.area,
+        hasMode: !!it.mode && s !== 'not_started', mode: it.mode, hasBranch: !!it.branch && s !== 'not_started', branch: it.branch, diffStat: it.diff || '',
+        hasElapsed: SESSION(s), elapsed: fmt(it.elapsed || 0),
+        isNotStarted: s === 'not_started', isQueued: s === 'queued', isCancelled: s === 'cancelled',
+        queueNote: 'All ' + limit + ' session slots are busy. This starts automatically when one frees up.', cancelNote: 'Stopped at step ' + (nd + 1) + ' of ' + steps.length + '. The branch ' + (it.branch || '') + ' is kept.',
+        startLabel: this.activeCount() >= limit ? 'Queue session' : 'Start session',
+        slotNote: this.activeCount() >= limit ? 'All ' + limit + ' slots busy — it will start when one frees' : this.activeCount() + ' of ' + limit + ' session slots in use',
+        slotColor: this.activeCount() >= limit ? t.text : t.text3,
+        desc: (it.desc || []).map(text => ({ text })), ac: (it.ac || []).map(text => ({ text })),
+        showSteps: s === 'running' || s === 'needs_input' || s === 'cancelled', showNeeds: s === 'needs_input' && !!it.question, q: { ...(it.question || {}), step: (steps.findIndex(x => x[0] === 'needs_input') + 1) + ' of ' + steps.length },
+        showControls: s === 'running' || s === 'needs_input',
+        progText: nd + ' of ' + steps.length + ' steps', segs: steps.map(x => ({ bg: x[0] === 'done' ? t.text2 : x[0] === 'running' ? t.run : x[0] === 'needs_input' ? t.att : t.border2 })),
+        steps: steps.map((x, i) => stepVM(x, i, 's')),
+        logCount: (it.log || []).length + ' events' + (SESSION(s) ? ' · live' : ''),
+        log: (it.log || []).map((x, i) => { const arr = Array.isArray(x[3]); const k = 'l' + i; const open = arr && (st.open[k] ?? true);
+          return { time: x[0], tool: x[1], arg: x[2], sum: arr ? x[3].length + ' lines' : (x[3] || ''), cursor: arr ? 'pointer' : 'default', chev: arr ? (open ? '▼' : '▶') : '', open, lines: arr ? x[3].map(l => ({ l })) : [], toggle: () => arr && this.tog(k, true),
+            toolColor: x[1] === 'Ask' ? t.att : x[1] === 'Think' ? t.text3 : t.text, argColor: x[1] === 'Think' ? t.text3 : t.text2 }; }),
+        isPR: HAS_PR(s) && !!it.pr, pr: { n: pr.n, title: pr.title, target: pr.target },
+        showFix: s === 'pr_failed', showFixing: s === 'fixing', showReady: s === 'ready', showStuck: s === 'stuck', showChecksRunning: s === 'pr_checks', isMerged: s === 'merged', mergedTitle: 'Merged !' + pr.n + ' into ' + pr.target + ' ' + ago(it.ago) + ' ago',
+        failTitle: failed.length + ' of ' + (pr.checks || []).length + ' checks failed',
+        failSub: 'Claude will address the failing tests and review comments on ' + it.branch + ', then push to !' + pr.n + '.',
+        attemptText: s === 'fixing' ? 'Fix attempt ' + pr.attempt + ' of ' + pr.max + ' running' : 'Fix attempt ' + ((pr.attempt || 0) + 1) + ' of ' + pr.max,
+        fixingSub: 'Working on the same branch. Checks re-run after the push.',
+        fixSteps: (pr.fixSteps || []).map((x, i) => stepVM(x, i, 'f')),
+        checks, checkSummary: passed + ' of ' + (pr.checks || []).length + ' passed',
+        hasHistory: (pr.history || []).length > 0, history: (pr.history || []).map((h, i) => ({ icon: h[0], label: h[1], when: h[2], sum: h[3], borderTop: bt(i) })) };
+    }
+
+    const promptText = it ? (st.promptEdits[it.id] ?? (st.mode === 'Review' ? REVIEW_TPL : IMPL_TPL).replace(/\{type\}/g, TYPES[it.type]).replace(/\{id\}/g, it.id).replace(/\{title\}/g, it.title).replace(/\{branch\}/g, 'agent/' + it.id + '-' + slug(it.title)).replace(/\{target\}/g, 'main').replace(/\{repo\}/g, '~/src/clinical-platform').replace(/\{area\}/g, it.area)) : '';
+    const popKind = st.popover; const pq = st.popQ.toLowerCase();
+    const popSrc = popKind === 'sprint' ? [['Sprint 42','current'],['Sprint 43','next'],['Sprint 41','ended'],['Backlog','']] : [['Me','Shaun Sheppard'],['Everyone',''],['Priya Shah',''],['Tom Okafor',''],['Ellie Grant','']];
+    const popOpts = popSrc.filter(o => !pq || (o[0] + o[1]).toLowerCase().includes(pq)).map(o => { const on = popKind === 'sprint' ? st.sprint === o[0] : st.person === o[0];
+      return { label: o[0], note: o[1], mark: on ? '✓' : '', bg: on ? t.sel : 'transparent', pick: () => this.setState(popKind === 'sprint' ? { sprint: o[0], popover: null, popQ: '' } : { person: o[0], popover: null, popQ: '' }) }; });
+    const sw = (on, toggle, text) => ({ on, toggle, bg: on ? t.text : 'transparent', border: on ? t.text : t.border2, knob: on ? t.surface : t.text3, x: on ? '16px' : '2px', text });
+    const chip = (map, key) => Object.keys(st[key]).map(l => { const on = st[key][l]; return { label: l, on, mark: on ? '✓' : '', bg: on ? t.sel : 'transparent', border: on ? t.border2 : t.border, color: on ? t.text : t.text2, toggle: () => this.setState(s => ({ [key]: { ...s[key], [l]: !s[key][l] } })) }; });
+    const tgl = k => () => this.setState(s => ({ tg: { ...s.tg, [k]: !s.tg[k] } }));
+    const connState = st.conn; const connBad = syncError && !firstRun;
+    const conn = { show: !!connState, icon: connState === 'testing' ? 'running' : connBad ? 'failed' : 'done', color: connBad ? t.fail : connState === 'testing' ? t.text2 : t.pass,
+      text: connState === 'testing' ? 'Testing…' : connBad ? 'Token expired on 9 Oct 2026 at 13:51. Replace it to resume syncing.' : 'Connected as Shaun Sheppard · 2 projects · token expires 14 Nov 2026',
+      notOk: connState !== 'ok', btnOpacity: connState === 'ok' ? 1 : 0.4 };
+    const attN = counts.attention;
+
+    return {
+      t, theme, rootRef: this.rootRef, searchRef: this.searchRef, primaryRef: this.primaryRef, setRef: this.setRef,
+      rootH: this.props.embedded ? '100%' : '100vh',
+      noConn: firstRun, selOpacity: firstRun ? 0.45 : 1,
+      sprint: st.sprint, sprintNote: st.sprint === 'Sprint 42' ? 'current' : '', person: st.person, personInitials: st.person === 'Me' ? 'SS' : st.person === 'Everyone' ? 'All' : st.person.split(' ').map(w => w[0]).join(''),
+      sprintOpen: popKind === 'sprint', personOpen: popKind === 'person', popOpts, popQ: st.popQ, onPopQ: e => this.setState({ popQ: e.target.value }),
+      openSprint: () => this.setState(s => ({ popover: s.popover === 'sprint' ? null : 'sprint', popQ: '' })), openPerson: () => this.setState(s => ({ popover: s.popover === 'person' ? null : 'person', popQ: '' })),
+      q: st.q, onQ: e => this.setState({ q: e.target.value }), searchW: narrow ? '200px' : '260px',
+      syncError, syncColor: syncError ? t.fail : t.text2, syncText: firstRun ? 'Not connected' : syncError ? 'Sync failed · last good 14:02' : st.syncing ? 'Syncing…' : 'Synced ' + st.synced + 's ago',
+      refresh: () => { if (firstRun) return; this.setState({ syncing: true }); this.later(() => this.setState({ syncing: false, synced: 0 }), 800); },
+      pollText: 'Polled ' + st.synced + 's ago · every 60s',
+      openSettings: () => this.setState({ view: 'settings', popover: null }), closeSettings: () => this.setState({ view: 'main' }),
+      settingsBg: st.view === 'settings' ? t.sel : 'transparent', settingsBorder: st.view === 'settings' ? t.border2 : t.border,
+      showStrip: !firstRun && st.view !== 'settings', wide: !narrow,
+      fNeeds: { n: attN, active: st.filter === 'attention', onClick: setF('attention'), color: attN ? t.att : t.text2, bg: attN ? t.attBg : 'transparent', border: attN ? t.att : t.border, outline: st.filter === 'attention' ? '2px solid ' + t.att : 'none' },
+      chips: [['running','Running','running'],['pr','PR open','pr_checks'],['done','Done','merged']].map(([k, label, status]) => ({ label, status, n: counts[k], active: st.filter === k, onClick: setF(k), bg: st.filter === k ? t.sel : 'transparent', border: st.filter === k ? t.text2 : t.border })),
+      showMain: !firstRun && st.view !== 'settings', showSettings: !firstRun && st.view === 'settings', showFirstRun: firstRun,
+      leftW: narrow ? '340px' : '410px', rowPad: comfy ? '12px 14px' : '8px 12px', stepPad: comfy ? '11px 14px' : '8px 14px', hdrPad: narrow ? '14px 20px' : '16px 28px', padX: narrow ? '20px' : '28px', checkNameW: narrow ? '130px' : '160px', logMaxH: '260px',
+      groups, listEmpty: vis.length === 0,
+      emptyFilterText: filterOut ? 'Nothing assigned to ' + st.person + ' in ' + st.sprint + '.' : st.q ? 'Nothing matches "' + st.q + '".' : 'No items in this filter.',
+      resetFilters: () => this.setState({ person: 'Me', sprint: 'Sprint 42', q: '', filter: null }),
+      noSel: !d, hasD: !!d, d: d || {},
+      emptyTitle: vis.length === 0 ? 'No work items match these filters' : attN ? attN + ' items need you' : 'Nothing needs you right now',
+      emptySub: vis.length === 0 ? 'Change the sprint or person in the top bar, or reset to your current sprint.' : attN ? 'Select one to see what it\'s waiting for.' : 'Sessions are running. You\'ll get a notification when one needs input or a PR fails.',
+      hasAttList: attItems.length > 0 && vis.length > 0,
+      attList: attItems.map((r, i) => ({ ...r, color: r.labelColor, borderTop: i ? '1px solid ' + t.border : 'none' })),
+      modes: ['Implement','Review'].map(m => ({ label: m, on: st.mode === m, bg: st.mode === m ? t.sel : 'transparent', color: st.mode === m ? t.text : t.text2, pick: () => this.setState({ mode: m }) })),
+      start: this.start, approve: this.approve, deny: this.deny, stop: this.stop, fixIt: this.fixIt, merge: this.merge, manual: this.manual, cancelQueue: this.cancelQueue, restart: this.restart,
+      reply: st.reply, onReply: e => this.setState({ reply: e.target.value }),
+      promptOpen: st.promptOpen, promptChev: st.promptOpen ? '▼' : '▶', promptNote: st.promptOpen ? 'Editable — sent when you start' : 'What Claude will be told · ' + st.mode + ' template',
+      togglePrompt: () => this.setState(s => ({ promptOpen: !s.promptOpen })), promptText, onPrompt: e => { const v = e.target.value; this.setState(s => ({ promptEdits: { ...s.promptEdits, [s.sel]: v } })); },
+      logOpen: st.logOpen, logChev: st.logOpen ? '▼' : '▶', toggleLog: () => this.setState(s => ({ logOpen: !s.logOpen })),
+      setNav: [['connection','Azure DevOps'],['watching','Watching'],['repos','Repositories'],['sessions','Sessions'],['pr','PR monitoring'],['notify','Notifications']].map(([k, label]) => ({ label, bg: st.setSec === k ? t.sel : 'transparent', color: st.setSec === k ? t.text : t.text2, weight: st.setSec === k ? 500 : 400,
+        go: () => { this.setState({ setSec: k }); const c = this.setRef.current; const el = c && c.querySelector('[data-sec="' + k + '"]'); if (el) c.scrollTop = el.offsetTop - 28; } })),
+      conn, testConn: () => { this.setState({ conn: 'testing' }); this.later(() => this.setState({ conn: 'ok' }), 900); }, finishSetup: () => this.setState({ setupDone: true, sel: null }),
+      typeChips: chip(null, 'types'), stateChips: chip(null, 'states'),
+      repos: [['Clinical\\Intake','~/src/clinical-platform','main'],['Clinical\\Referrals','~/src/clinical-platform','main'],['Clinical\\Scheduling','~/src/scheduling-service','develop'],['Patient Portal','~/src/patient-portal','main']].map((r, i) => ({ area: r[0], path: r[1], branch: r[2], borderTop: i ? '1px solid ' + t.border : 'none' })),
+      limit, limDown: () => this.setState({ limit: Math.max(1, limit - 1) }), limUp: () => this.setState({ limit: Math.min(12, limit + 1) }),
+      implTpl: IMPL_TPL, reviewTpl: REVIEW_TPL,
+      tg: { fixclick: sw(st.tg.fixclick, tgl('fixclick'), st.tg.fixclick ? 'On — failures wait for you to press Fix it' : 'Off — fixes start automatically, up to the limit') },
+      notifs: [['ninput','needs_input','Claude needs input or permission'],['prfail','failed','A PR check fails'],['ready','ready','A PR is ready to merge']].map(([k, icon, label], i) => ({ icon, label, borderTop: i ? '1px solid ' + t.border : 'none', ...sw(st.tg[k], tgl(k)) })),
+      toasts: st.toasts.map(x => ({ ...x, border: x.status === 'needs_input' ? t.att : t.border2, view: () => this.setState(s => ({ sel: x.id, view: 'main', toasts: s.toasts.filter(y => y.k !== x.k) })) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

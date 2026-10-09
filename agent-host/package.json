@@ -1,0 +1,17 @@
+{
+  "name": "foreman-agent-host",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "latest",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "~6.0.2"
+  }
+}

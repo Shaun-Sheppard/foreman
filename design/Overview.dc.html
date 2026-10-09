@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#2a2c31}a{color:#cfd3da;text-decoration:none}a:hover{color:#fff;text-decoration:underline}</style>
+</helmet>
+<div style="font-family:'Geist',system-ui,sans-serif;color:#e7e8eb;padding:56px 64px 120px;display:flex;flex-direction:column;gap:72px;width:max-content">
+
+  <header style="display:flex;flex-direction:column;gap:14px;max-width:1100px">
+    <span style="font-family:'Geist Mono',monospace;font-size:13px;color:#9a9ea6">Agent Launcher · visual design · 9 Oct 2026</span>
+    <span style="font-size:40px;font-weight:600;letter-spacing:-0.02em">DevOps Agent Launcher — screens &amp; states</span>
+    <span style="font-size:17px;line-height:1.6;color:#b9bcc3;text-wrap:pretty">Every artboard below is the live prototype at fixed props. Open <a href="AgentLauncher.dc.html">AgentLauncher.dc.html</a> to click through it: select cards, Start session, Approve, Fix it, Complete merge, ↑↓ / N / Enter / &#47;. Ten seconds in, 4507 asks for permission to show the attention escalation. Also: <a href="Component%20Sheet.dc.html">Component sheet</a> · <a href="Visual%20System.dc.html">Visual system note</a>.</span>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 40px;margin-top:10px;font-size:14px;line-height:1.55;color:#b9bcc3">
+      <span><b style="color:#e7e8eb">Title bar holds the top bar.</b> One 40px row saves vertical space for the list; generic window glyphs avoid copying macOS or Windows.</span>
+      <span><b style="color:#e7e8eb">Ready to merge counts as "Needs you".</b> It's blocked on his click, so it sits with Needs input, PR failed and Stuck.</span>
+      <span><b style="color:#e7e8eb">Primary buttons are neutral, not coloured.</b> Colour is kept for status, so it never competes with the things that need him.</span>
+      <span><b style="color:#e7e8eb">Attention = filled shape + tint + bold + reason.</b> Quiet items use hollow icons, so a needs-attention card reads in greyscale.</span>
+      <span><b style="color:#e7e8eb">Geist + Geist Mono.</b> One family in two cuts keeps IDs, branches and logs aligned with the UI text and stays legible at 11–13px.</span>
+      <span><b style="color:#e7e8eb">Action first in the detail pane.</b> Start / Fix it / Merge / Approve always sit above the scroll, so the core action is one click after selecting.</span>
+    </div>
+  </header>
+
+  <section id="t1" style="display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;gap:12px"><a href="#t1" style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;padding:3px 8px;background:#e7e8eb;color:#111;border-radius:4px;text-decoration:none">1</a><span style="font-size:20px;font-weight:600">Main window — busy · 1440 × 900</span><span style="font-size:14px;color:#9a9ea6">5 sessions running · 4 need you · 5 PRs open</span></div>
+    <div style="display:flex;gap:48px;align-items:flex-start">
+      <div id="1a" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:8px;align-items:baseline;font-size:14px;color:#b9bcc3"><a href="#1a" style="font-family:'Geist Mono',monospace;font-size:12px;padding:2px 7px;background:#3a3d44;border-radius:4px;color:#e7e8eb">1a</a>Dark · running session selected</div><div style="width:1440px;height:900px;border-radius:10px;overflow:hidden;border:1px solid #3a3d44"><dc-import name="AgentLauncher" embedded="true" live="false" selected="4520" hint-size="1440px,900px" style="width:1440px;height:900px"></dc-import></div></div>
+      <div id="1b" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:8px;align-items:baseline;font-size:14px;color:#b9bcc3"><a href="#1b" style="font-family:'Geist Mono',monospace;font-size:12px;padding:2px 7px;background:#3a3d44;border-radius:4px;color:#e7e8eb">1b</a>Light · same state</div><div style="width:1440px;height:900px;border-radius:10px;overflow:hidden;border:1px solid #3a3d44"><dc-import name="AgentLauncher" embedded="true" live="false" theme="light" selected="4520" hint-size="1440px,900px" style="width:1440px;height:900px"></dc-import></div></div>
+    </div>
+  </section>
+
+  <section id="t2" style="display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;gap:12px"><a href="#t2" style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;padding:3px 8px;background:#e7e8eb;color:#111;border-radius:4px;text-decoration:none">2</a><span style="font-size:20px;font-weight:600">Detail pane — every lifecycle state</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1440px);gap:56px 48px">
+      <sc-for list="{{ details }}" as="a" hint-placeholder-count="9">
+        <div id="{{ a.id }}" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:8px;align-items:baseline;font-size:14px;color:#b9bcc3"><a href="{{ a.href }}" style="font-family:'Geist Mono',monospace;font-size:12px;padding:2px 7px;background:#3a3d44;border-radius:4px;color:#e7e8eb">{{ a.id }}</a><b style="color:#e7e8eb;font-weight:600">{{ a.name }}</b>{{ a.note }}</div><div style="width:1440px;height:900px;border-radius:10px;overflow:hidden;border:1px solid #3a3d44"><dc-import name="AgentLauncher" embedded="true" live="false" theme="{{ a.theme }}" selected="{{ a.sel }}" session-limit="{{ a.limit }}" flash="{{ a.flash }}" prompt-open="{{ a.prompt }}" scenario="{{ a.scenario }}" view="{{ a.view }}" hint-size="1440px,900px" style="width:1440px;height:900px"></dc-import></div></div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="t3" style="display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;gap:12px"><a href="#t3" style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;padding:3px 8px;background:#e7e8eb;color:#111;border-radius:4px;text-decoration:none">3</a><span style="font-size:20px;font-weight:600">Settings, empty, first-run and error states</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1440px);gap:56px 48px">
+      <sc-for list="{{ screens }}" as="a" hint-placeholder-count="5">
+        <div id="{{ a.id }}" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:8px;align-items:baseline;font-size:14px;color:#b9bcc3"><a href="{{ a.href }}" style="font-family:'Geist Mono',monospace;font-size:12px;padding:2px 7px;background:#3a3d44;border-radius:4px;color:#e7e8eb">{{ a.id }}</a><b style="color:#e7e8eb;font-weight:600">{{ a.name }}</b>{{ a.note }}</div><div style="width:1440px;height:900px;border-radius:10px;overflow:hidden;border:1px solid #3a3d44"><dc-import name="AgentLauncher" embedded="true" live="false" theme="{{ a.theme }}" selected="{{ a.sel }}" session-limit="{{ a.limit }}" scenario="{{ a.scenario }}" view="{{ a.view }}" hint-size="1440px,900px" style="width:1440px;height:900px"></dc-import></div></div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section id="t4" style="display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:baseline;gap:12px"><a href="#t4" style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;padding:3px 8px;background:#e7e8eb;color:#111;border-radius:4px;text-decoration:none">4</a><span style="font-size:20px;font-weight:600">Minimum window · 1100 × 700</span><span style="font-size:14px;color:#9a9ea6">List narrows to 340px, keyboard hints and running-card reasons drop, detail padding tightens</span></div>
+    <div style="display:flex;gap:48px;align-items:flex-start">
+      <sc-for list="{{ mins }}" as="a" hint-placeholder-count="3">
+        <div id="{{ a.id }}" style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:8px;align-items:baseline;font-size:14px;color:#b9bcc3"><a href="{{ a.href }}" style="font-family:'Geist Mono',monospace;font-size:12px;padding:2px 7px;background:#3a3d44;border-radius:4px;color:#e7e8eb">{{ a.id }}</a><b style="color:#e7e8eb;font-weight:600">{{ a.name }}</b></div><div style="width:1100px;height:700px;border-radius:10px;overflow:hidden;border:1px solid #3a3d44"><dc-import name="AgentLauncher" embedded="true" live="false" theme="{{ a.theme }}" selected="{{ a.sel }}" hint-size="1100px,700px" style="width:1100px;height:700px"></dc-import></div></div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const mk = (id, name, note, o) => ({ id, href: '#' + id, name, note: note ? '· ' + note : '', theme: 'dark', sel: 4520, limit: 6, flash: null, scenario: 'busy', view: 'main', ...o });
+    return {
+      details: [
+        mk('2a', 'Not started', 'Start session + mode, prompt preview open', { sel: 4530, limit: 8, prompt: true }),
+        mk('2b', 'Session running', 'steps, live activity log, controls', { sel: 4520 }),
+        mk('2c', 'Needs input', 'pinned permission panel; card shown mid-highlight', { sel: 4512, flash: 4512 }),
+        mk('2d', 'PR checks running', 'nothing to do yet', { sel: 4493 }),
+        mk('2e', 'PR failed', 'log excerpt, review comments, Fix it 1 of 3', { sel: 4498 }),
+        mk('2f', 'Fixing', 'attempt 2 of 3 in progress', { sel: 4489 }),
+        mk('2g', 'Ready to merge', 'deliberate Complete merge', { sel: 4460 }),
+        mk('2h', 'Stuck', 'fix limit reached; manual options replace Fix it', { sel: 4471 }),
+        mk('2i', 'Concurrency limit', 'limit 5 reached → Queue session', { sel: 4531, limit: 5 }),
+        mk('2j', 'Needs input · light', '', { sel: 4512, theme: 'light' }),
+        mk('2k', 'PR failed · light', '', { sel: 4498, theme: 'light' }),
+        mk('2l', 'Merged', 'completed group expanded on select', { sel: 4440 })
+      ],
+      screens: [
+        mk('3a', 'Settings', 'connection, watching, repos, sessions, PR monitoring, notifications', { view: 'settings' }),
+        mk('3b', 'No selection', 'empty detail lists what needs attention', { sel: 'none' }),
+        mk('3c', 'Empty — no items match', 'person filter set to Priya Shah', { scenario: 'empty', sel: 'none' }),
+        mk('3d', 'First run', 'no DevOps connection yet', { scenario: 'firstrun', sel: 'none' }),
+        mk('3e', 'Sync error', 'non-blocking banner, last good sync time', { scenario: 'syncerror', sel: 4498 }),
+        mk('3f', 'Settings · light', '', { view: 'settings', theme: 'light' })
+      ],
+      mins: [
+        mk('4a', 'Running', '', { sel: 4520 }),
+        mk('4b', 'PR failed', '', { sel: 4498 }),
+        mk('4c', 'Needs input · light', '', { sel: 4512, theme: 'light' })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

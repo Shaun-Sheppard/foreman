@@ -1,0 +1,9 @@
+{
+  "count": 4,
+  "value": [
+    { "id": "i40", "name": "Sprint 40", "path": "Clinical Platform\\Sprint 40", "attributes": { "startDate": "2026-08-31T00:00:00Z", "finishDate": "2026-09-11T00:00:00Z", "timeFrame": "past" } },
+    { "id": "i41", "name": "Sprint 41", "path": "Clinical Platform\\Sprint 41", "attributes": { "startDate": "2026-09-14T00:00:00Z", "finishDate": "2026-09-25T00:00:00Z", "timeFrame": "past" } },
+    { "id": "i42", "name": "Sprint 42", "path": "Clinical Platform\\Sprint 42", "attributes": { "startDate": "2026-09-28T00:00:00Z", "finishDate": "2026-10-09T00:00:00Z", "timeFrame": "current" } },
+    { "id": "i43", "name": "Sprint 43", "path": "Clinical Platform\\Sprint 43", "attributes": { "startDate": "2026-10-12T00:00:00Z", "finishDate": "2026-10-23T00:00:00Z", "timeFrame": "future" } }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "totalCount": 2,
+  "count": 2,
+  "comments": [
+    { "id": 2, "text": "<div>Agreed with the clinical safety lead: reject on blur, not on submit.</div>", "createdBy": { "displayName": "Priya Shah" }, "createdDate": "2026-10-08T15:42:00Z" },
+    { "id": 1, "text": "<div>The checksum rules are on the <a href=\"https://www.datadictionary.nhs.uk/attributes/nhs_number.html\">NHS data dictionary</a>.</div>", "createdBy": { "displayName": "Shaun Sheppard" }, "createdDate": "2026-10-07T09:10:00Z" }
+  ]
+}

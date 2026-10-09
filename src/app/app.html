@@ -1,0 +1,149 @@
+<div class="titlebar" (mousedown)="startDrag($event)" (dblclick)="titleDblClick($event)">
+  <div class="brand">
+    <div class="logo"><div></div></div>
+    <span>Foreman</span>
+  </div>
+  <div class="divider"></div>
+
+  <fm-picker
+    [label]="store.sprintLabel()"
+    [note]="store.sprintIsCurrent() ? 'current' : ''"
+    [value]="store.filters().sprint"
+    [options]="sprintOptions()"
+    [loading]="sprintsLoading()"
+    [disabled]="firstRun()"
+    placeholder="Search sprints"
+    (opened)="loadSprints()"
+    (picked)="pickSprint($event)"
+  />
+  <fm-picker
+    [label]="store.personLabel()"
+    [value]="store.filters().person"
+    [options]="personOptions()"
+    [loading]="peopleLoading()"
+    [disabled]="firstRun()"
+    [hasAvatar]="true"
+    placeholder="Search people"
+    (opened)="loadPeople()"
+    (picked)="pickPerson($event)"
+  >
+    <span class="avatar">{{ store.personInitials() }}</span>
+  </fm-picker>
+
+  <div class="spacer" style="min-width:8px"></div>
+
+  <div class="search">
+    <svg width="13" height="13" viewBox="0 0 16 16">
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="M10.5 10.5 L14 14" />
+    </svg>
+    <input
+      #search
+      placeholder="Search ID or title"
+      spellcheck="false"
+      [disabled]="firstRun()"
+      [value]="store.query()"
+      (input)="store.query.set(search.value)"
+    />
+    <span class="kbd">/</span>
+  </div>
+
+  <div class="sync" [class.bad]="syncError()">
+    @if (syncError()) {
+      <fm-status-icon status="failed" [size]="12" />
+    }
+    <span class="tnum">{{ syncText() }}</span>
+    <button title="Sync now" aria-label="Sync now" [disabled]="firstRun()" (click)="store.refresh()">↻</button>
+  </div>
+
+  <button
+    class="settings"
+    title="Settings"
+    aria-label="Settings"
+    [class.on]="showSettings()"
+    [disabled]="firstRun()"
+    (click)="toggleSettings()"
+  >
+    <svg width="14" height="14" viewBox="0 0 16 16">
+      <path d="M2 4 H14 M2 8 H14 M2 12 H14" />
+      <circle cx="10" cy="4" r="1.8" />
+      <circle cx="5" cy="8" r="1.8" />
+      <circle cx="11" cy="12" r="1.8" />
+    </svg>
+  </button>
+
+  <div class="winctl">
+    <button aria-label="Minimise" (click)="win.minimize()">
+      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 5 H9" /></svg>
+    </button>
+    <button aria-label="Maximise" (click)="win.maximize()">
+      <svg width="10" height="10" viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" /></svg>
+    </button>
+    <button class="close" aria-label="Close" (click)="win.close()">
+      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5" /></svg>
+    </button>
+  </div>
+</div>
+
+@if (showMain()) {
+  <div class="strip">
+    <button
+      class="chip needs"
+      [class.some]="store.counts().attention > 0"
+      [class.on]="store.chip() === 'attention'"
+      [attr.aria-pressed]="store.chip() === 'attention'"
+      (click)="toggleChip('attention')"
+    >
+      <fm-status-icon status="needs_input" [size]="14" />
+      <span class="lbl">Needs you</span>
+      <span class="n mono">{{ store.counts().attention }}</span>
+    </button>
+    @for (c of chips; track c.key) {
+      <button class="chip" [class.on]="store.chip() === c.key" [attr.aria-pressed]="store.chip() === c.key" (click)="toggleChip(c.key)">
+        <fm-status-icon [status]="c.status" [size]="13" [animate]="false" />
+        <span>{{ c.label }}</span>
+        <span class="n mono">{{ store.counts()[c.key] }}</span>
+      </button>
+    }
+    <div class="spacer"></div>
+    <div class="hints">
+      <span><span class="kbd">N</span>next needing you</span>
+      <span><span class="kbd">↑↓</span>move</span>
+      <span><span class="kbd">↵</span>open</span>
+    </div>
+  </div>
+}
+
+@if (syncError(); as err) {
+  <div class="banner" role="status">
+    <fm-status-icon status="failed" [size]="14" />
+    <span class="what">Can't sync with Azure DevOps — {{ err.message }}.</span>
+    <span class="detail">{{ bannerDetail() }}</span>
+    <div class="spacer"></div>
+    <button class="btn sm" (click)="store.view.set('settings')">{{ tokenProblem() ? 'Update token' : 'Open settings' }}</button>
+    <button class="btn sm ghost" (click)="store.refresh()">Retry now</button>
+  </div>
+}
+
+@if (showSettings()) {
+  <fm-settings />
+} @else if (showMain()) {
+  <div class="main">
+    <fm-work-list />
+    <fm-detail-pane />
+  </div>
+}
+
+<div class="toasts">
+  @for (t of store.toasts(); track t) {
+    <div class="toast" role="status" [class.bad]="t.status === 'failed'" [class.att]="t.status === 'needs_input'">
+      <fm-status-icon [status]="t.status" [size]="15" />
+      <div class="msg"><b>{{ t.title }}</b>@if (t.text) {<span>{{ t.text }}</span>}</div>
+      @if (t.itemId !== null) {
+        <button class="btn sm" (click)="viewToast(t.itemId); store.dismiss(t)">View</button>
+      } @else {
+        <button class="btn sm" (click)="store.dismiss(t)">Dismiss</button>
+      }
+    </div>
+  }
+</div>

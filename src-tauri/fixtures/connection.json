@@ -1,0 +1,7 @@
+{
+  "authenticatedUser": {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "providerDisplayName": "Shaun Sheppard",
+    "properties": { "Account": { "$type": "System.String", "$value": "shaun@fixture.example" } }
+  }
+}

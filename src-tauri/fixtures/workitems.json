@@ -1,0 +1,372 @@
+{
+ "count": 16,
+ "value": [
+  {
+   "id": 4512,
+   "rev": 3,
+   "fields": {
+    "System.Id": 4512,
+    "System.WorkItemType": "Task",
+    "System.Title": "Add NHS number validation to patient intake form",
+    "System.State": "Active",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Intake",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 1,
+    "System.ChangedDate": "2026-10-09T12:55:00Z",
+    "System.Description": "<div>The intake form accepts any 10 digits as an NHS number. Clinicians have entered numbers that fail the Modulus 11 check, which then bounce when we sync to the Spine.</div><div><br></div><div>Validate the number as the receptionist types it and block submission if it is invalid. Formatting with spaces (<code>943 476 5919</code>) must still be accepted.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Numbers failing the Modulus 11 check show an inline error on blur.</li><li>Spaces and hyphens are stripped before validation.</li><li>The Save button is disabled while the number is invalid.</li><li>Unit tests cover the published NHS test numbers.</li></ul>"
+   },
+   "relations": [
+    {
+     "rel": "System.LinkTypes.Hierarchy-Reverse",
+     "url": "https://dev.azure.com/fixture-org/_apis/wit/workItems/4466",
+     "attributes": {
+      "name": "Parent"
+     }
+    },
+    {
+     "rel": "System.LinkTypes.Related",
+     "url": "https://dev.azure.com/fixture-org/_apis/wit/workItems/4507",
+     "attributes": {
+      "name": "Related"
+     }
+    }
+   ]
+  },
+  {
+   "id": 4498,
+   "rev": 4,
+   "fields": {
+    "System.Id": 4498,
+    "System.WorkItemType": "Bug",
+    "System.Title": "Appointment reminders send twice when clocks change",
+    "System.State": "Active",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 1,
+    "System.ChangedDate": "2026-10-09T11:20:00Z",
+    "Microsoft.VSTS.TCM.ReproSteps": "<ol><li>Create an appointment for 02:30 on the last Sunday of October.</li><li>Wait for the reminder job to run across the clock change.</li><li>Two reminder texts are sent.</li></ol><div><b>Expected:</b> one reminder.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": ""
+   },
+   "relations": []
+  },
+  {
+   "id": 4471,
+   "rev": 5,
+   "fields": {
+    "System.Id": 4471,
+    "System.WorkItemType": "Task",
+    "System.Title": "Export clinic schedules as an iCal feed",
+    "System.State": "Committed",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-09T09:02:00Z",
+    "System.Description": "<div>Export clinic schedules as an iCal feed. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4466,
+   "rev": 6,
+   "fields": {
+    "System.Id": 4466,
+    "System.WorkItemType": "User Story",
+    "System.Title": "Show allergy warnings on the prescription screen",
+    "System.State": "Active",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Intake",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-08T16:40:00Z",
+    "System.Description": "<div>Show allergy warnings on the prescription screen. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4520,
+   "rev": 7,
+   "fields": {
+    "System.Id": 4520,
+    "System.WorkItemType": "Task",
+    "System.Title": "Move PatientService to .NET 9 minimal hosting",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Intake",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-08T14:11:00Z",
+    "System.Description": "<div>Move PatientService to .NET 9 minimal hosting. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4507,
+   "rev": 3,
+   "fields": {
+    "System.Id": 4507,
+    "System.WorkItemType": "Task",
+    "System.Title": "Audit log for prescription edits",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Intake",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-08T10:30:00Z",
+    "System.Description": "<div>Audit log for prescription edits. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4515,
+   "rev": 4,
+   "fields": {
+    "System.Id": 4515,
+    "System.WorkItemType": "User Story",
+    "System.Title": "Review referral triage rules engine",
+    "System.State": "Approved",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Referrals",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-10-07T17:05:00Z",
+    "System.Description": "<div>Review referral triage rules engine. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4503,
+   "rev": 5,
+   "fields": {
+    "System.Id": 4503,
+    "System.WorkItemType": "Bug",
+    "System.Title": "Referral priority ignores triage rule overrides",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Referrals",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-10-07T13:48:00Z",
+    "Microsoft.VSTS.TCM.ReproSteps": "<div>Referral priority ignores triage rule overrides. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": ""
+   },
+   "relations": []
+  },
+  {
+   "id": 4489,
+   "rev": 6,
+   "fields": {
+    "System.Id": 4489,
+    "System.WorkItemType": "Task",
+    "System.Title": "Paginate referral search results",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Referrals",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-10-06T15:22:00Z",
+    "System.Description": "<div>Paginate referral search results. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4525,
+   "rev": 7,
+   "fields": {
+    "System.Id": 4525,
+    "System.WorkItemType": "Bug",
+    "System.Title": "Clinic picker loses selection after session timeout",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 4,
+    "System.ChangedDate": "2026-10-06T09:14:00Z",
+    "Microsoft.VSTS.TCM.ReproSteps": "<div>Clinic picker loses selection after session timeout. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": ""
+   },
+   "relations": []
+  },
+  {
+   "id": 4531,
+   "rev": 3,
+   "fields": {
+    "System.Id": 4531,
+    "System.WorkItemType": "Task",
+    "System.Title": "Add consent capture step to intake wizard",
+    "System.State": "Active",
+    "System.AssignedTo": {
+     "displayName": "Priya Shah",
+     "uniqueName": "priya@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Intake",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-09T08:30:00Z",
+    "System.Description": "<div>Add consent capture step to intake wizard. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4533,
+   "rev": 4,
+   "fields": {
+    "System.Id": 4533,
+    "System.WorkItemType": "Bug",
+    "System.Title": "Triage dashboard double-counts transferred referrals",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Priya Shah",
+     "uniqueName": "priya@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Referrals",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-08T12:00:00Z",
+    "Microsoft.VSTS.TCM.ReproSteps": "<div>Triage dashboard double-counts transferred referrals. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": ""
+   },
+   "relations": []
+  },
+  {
+   "id": 4537,
+   "rev": 5,
+   "fields": {
+    "System.Id": 4537,
+    "System.WorkItemType": "Task",
+    "System.Title": "Cache clinic availability lookups",
+    "System.State": "Committed",
+    "System.AssignedTo": {
+     "displayName": "Tom Okafor",
+     "uniqueName": "tom@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 42",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-10-07T10:45:00Z",
+    "System.Description": "<div>Cache clinic availability lookups. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4541,
+   "rev": 6,
+   "fields": {
+    "System.Id": 4541,
+    "System.WorkItemType": "Task",
+    "System.Title": "Bulk reschedule clinics for bank holidays",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 43",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 2,
+    "System.ChangedDate": "2026-10-05T11:00:00Z",
+    "System.Description": "<div>Bulk reschedule clinics for bank holidays. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4544,
+   "rev": 7,
+   "fields": {
+    "System.Id": 4544,
+    "System.WorkItemType": "User Story",
+    "System.Title": "Let patients choose reminder channel",
+    "System.State": "New",
+    "System.AssignedTo": {
+     "displayName": "Priya Shah",
+     "uniqueName": "priya@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 43",
+    "System.AreaPath": "Clinical Platform\\Scheduling",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-10-05T10:00:00Z",
+    "System.Description": "<div>Let patients choose reminder channel. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  },
+  {
+   "id": 4440,
+   "rev": 3,
+   "fields": {
+    "System.Id": 4440,
+    "System.WorkItemType": "Task",
+    "System.Title": "Remove legacy fax referral endpoint",
+    "System.State": "Active",
+    "System.AssignedTo": {
+     "displayName": "Shaun Sheppard",
+     "uniqueName": "shaun@fixture.example"
+    },
+    "System.IterationPath": "Clinical Platform\\Sprint 41",
+    "System.AreaPath": "Clinical Platform\\Referrals",
+    "System.TeamProject": "Clinical Platform",
+    "Microsoft.VSTS.Common.Priority": 3,
+    "System.ChangedDate": "2026-09-24T16:00:00Z",
+    "System.Description": "<div>Remove legacy fax referral endpoint. See the linked story for background and the agreed approach.</div>",
+    "Microsoft.VSTS.Common.AcceptanceCriteria": "<ul><li>Behaviour matches the description above.</li><li>Existing tests pass and new behaviour is covered.</li></ul>"
+   },
+   "relations": []
+  }
+ ]
+}

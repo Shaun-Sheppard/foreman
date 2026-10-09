@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.angular/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+agent-host/node_modules/
+agent-host/dist/
+src-tauri/binaries/
+*.bun-build

@@ -1,0 +1,41 @@
+{
+  "name": "foreman",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "dev:fixtures": "FOREMAN_FIXTURES=1 tauri dev",
+    "build:host": "npm --prefix agent-host install --no-audit --no-fund && npm --prefix agent-host run build",
+    "test:host": "npm --prefix agent-host run build && node --test agent-host/dist/parse.test.js",
+    "build:sidecar": "node scripts/build-sidecar.mjs",
+    "bundle": "npm run build:sidecar && tauri build --config src-tauri/tauri.bundle.conf.json"
+  },
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@tauri-apps/api": "^2.12.2",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.2",
+    "@angular/cli": "^22.2.2",
+    "@angular/compiler-cli": "^22.2.0",
+    "@tauri-apps/cli": "^2.12.1",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2"
+  }
+}

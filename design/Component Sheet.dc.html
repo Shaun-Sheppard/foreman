@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>html,body{margin:0}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}button{font:inherit;color:inherit}</style>
+</helmet>
+<div style="background:{{ t.bg }};color:{{ t.text }};font-family:'Geist',system-ui,sans-serif;font-size:13px;line-height:1.4;padding:48px 56px 96px;width:1360px;box-sizing:border-box;display:flex;flex-direction:column;gap:48px">
+
+  <header style="display:flex;align-items:flex-end;gap:24px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+      <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text3 }}">Agent Launcher · component sheet · {{ themeName }}</span>
+      <span style="font-size:28px;font-weight:600;letter-spacing:-0.02em">Components &amp; status iconography</span>
+    </div>
+    <div style="display:flex;border:1px solid {{ t.border }};border-radius:7px;padding:2px;gap:2px">
+      <sc-for list="{{ themeOpts }}" as="o"><button onClick="{{ o.pick }}" style="height:28px;padding:0 12px;border:0;border-radius:5px;background:{{ o.bg }};color:{{ o.color }};cursor:pointer;font-weight:500">{{ o.label }}</button></sc-for>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:16px;font-weight:600">Status icon set</span><span style="color:{{ t.text2 }}">16px grid · 1.5px strokes · filled = needs or has a result, hollow = quiet, rotating arc = working</span></div>
+    <div style="border:1px solid {{ t.border }};border-radius:10px;overflow:hidden;background:{{ t.surface }}">
+      <div style="display:grid;grid-template-columns:150px 70px 70px 70px minmax(0,1fr) 170px;gap:16px;padding:9px 16px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{{ t.text3 }};border-bottom:1px solid {{ t.border }}"><span>Status</span><span>14px</span><span>20px</span><span>Greyscale</span><span>Meaning · shape</span><span>Used on</span></div>
+      <sc-for list="{{ icons }}" as="i" hint-placeholder-count="12">
+        <div style="display:grid;grid-template-columns:150px 70px 70px 70px minmax(0,1fr) 170px;gap:16px;padding:9px 16px;align-items:center;border-top:{{ i.borderTop }}">
+          <span style="font-weight:500">{{ i.name }}</span>
+          <x-import component="StatusIcon" from="./status-icons.js" status="{{ i.key }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+          <x-import component="StatusIcon" from="./status-icons.js" status="{{ i.key }}" theme="{{ theme }}" size="20" hint-size="20px,20px"></x-import>
+          <div style="filter:grayscale(1)"><x-import component="StatusIcon" from="./status-icons.js" status="{{ i.key }}" theme="{{ theme }}" size="20" animate="false" hint-size="20px,20px"></x-import></div>
+          <span style="color:{{ t.text2 }}">{{ i.meaning }}</span>
+          <span style="font-size:12px;color:{{ t.text3 }}">{{ i.where }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:24px;color:{{ t.text2 }}">
+      <span style="font-weight:500;color:{{ t.text }}">Work-item types</span>
+      <span style="display:flex;align-items:center;gap:6px"><x-import component="TypeIcon" from="./status-icons.js" type="task" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>Task</span>
+      <span style="display:flex;align-items:center;gap:6px"><x-import component="TypeIcon" from="./status-icons.js" type="bug" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>Bug</span>
+      <span style="display:flex;align-items:center;gap:6px"><x-import component="TypeIcon" from="./status-icons.js" type="story" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>User story</span>
+      <span style="color:{{ t.text3 }}">Monochrome on purpose — colour belongs to status only.</span>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <span style="font-size:16px;font-weight:600">State badges</span>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <sc-for list="{{ badges }}" as="b"><span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px 0 6px;border-radius:999px;background:{{ b.bg }};color:{{ b.color }};font-weight:600;font-size:12px"><x-import component="StatusIcon" from="./status-icons.js" status="{{ b.key }}" theme="{{ theme }}" size="13" animate="false" hint-size="13px,13px"></x-import>{{ b.label }}</span></sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:baseline;gap:12px"><span style="font-size:16px;font-weight:600">Work-item card</span><span style="color:{{ t.text2 }}">410px list width · compact 52px · comfortable 60px</span></div>
+    <div style="display:grid;grid-template-columns:repeat(2,410px);gap:22px 40px">
+      <sc-for list="{{ cards }}" as="r" hint-placeholder-count="10">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:{{ t.text3 }}">{{ r.variant }}</span>
+          <div style="background:{{ t.surface }};border:1px solid {{ t.border }}">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:{{ r.bg }};outline:{{ r.outline }};outline-offset:-2px">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <x-import component="StatusIcon" from="./status-icons.js" status="{{ r.status }}" theme="{{ theme }}" size="14" hint-size="14px,14px"></x-import>
+                <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ r.id }}</span>
+                <x-import component="TypeIcon" from="./status-icons.js" type="{{ r.type }}" theme="{{ theme }}" size="13" hint-size="13px,13px"></x-import>
+                <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:{{ r.weight }};color:{{ r.titleColor }}">{{ r.title }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding-left:22px;font-size:12px;color:{{ t.text2 }};min-width:0">
+                <span style="color:{{ r.labelColor }};font-weight:{{ r.labelWeight }};white-space:nowrap">{{ r.label }}</span>
+                <sc-if value="{{ r.hasProg }}"><div style="display:flex;gap:2px;width:70px"><sc-for list="{{ r.segs }}" as="s"><div style="flex:1;height:4px;border-radius:1px;background:{{ s.bg }}"></div></sc-for></div><span style="font-family:'Geist Mono',monospace;font-size:11.5px">{{ r.prog }}</span></sc-if>
+                <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.reason }}</span>
+                <div style="flex:1"></div>
+                <span style="font-family:'Geist Mono',monospace;font-size:11.5px">{{ r.pr }}</span>
+                <span style="color:{{ t.text3 }}">{{ r.ago }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <span style="font-size:16px;font-weight:600">Buttons</span>
+    <div style="display:grid;grid-template-columns:120px repeat(4,max-content);gap:14px 28px;align-items:center">
+      <span></span><span style="font-size:11px;color:{{ t.text3 }};text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Default</span><span style="font-size:11px;color:{{ t.text3 }};text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Hover</span><span style="font-size:11px;color:{{ t.text3 }};text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Focus</span><span style="font-size:11px;color:{{ t.text3 }};text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Disabled</span>
+      <span style="color:{{ t.text2 }}">Primary</span>
+      <button style="height:34px;padding:0 14px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600">Start session</button>
+      <button style="height:34px;padding:0 14px;border:0;border-radius:6px;background:{{ t.btnHover }};color:{{ t.btnText }};font-weight:600">Fix it</button>
+      <button style="height:34px;padding:0 14px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;outline:2px solid {{ t.run }};outline-offset:2px">Complete merge</button>
+      <button style="height:34px;padding:0 14px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600;opacity:0.4">Continue</button>
+      <span style="color:{{ t.text2 }}">Secondary</span>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};font-weight:500">View diff</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.text3 }};border-radius:6px;background:{{ t.hover }};font-weight:500">Open branch folder</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};font-weight:500;outline:2px solid {{ t.run }};outline-offset:2px">Deny</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.btn2 }};font-weight:500;opacity:0.4">Test connection</button>
+      <span style="color:{{ t.text2 }}">Destructive</span>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:transparent;color:{{ t.fail }};font-weight:500">Stop session</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:{{ t.failBg }};color:{{ t.fail }};font-weight:500">Stop session</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:transparent;color:{{ t.fail }};font-weight:500;outline:2px solid {{ t.run }};outline-offset:2px">Stop fix</button>
+      <button style="height:30px;padding:0 12px;border:1px solid {{ t.fail }};border-radius:6px;background:transparent;color:{{ t.fail }};font-weight:500;opacity:0.4">Stop session</button>
+      <span style="color:{{ t.text2 }}">Segmented</span>
+      <div style="display:flex;border:1px solid {{ t.border }};border-radius:7px;padding:2px;gap:2px;width:max-content;background:{{ t.surface }}"><span style="height:28px;line-height:28px;padding:0 10px;border-radius:5px;background:{{ t.sel }};font-weight:500">Implement</span><span style="height:28px;line-height:28px;padding:0 10px;border-radius:5px;color:{{ t.text2 }};font-weight:500">Review</span></div>
+      <span></span><span></span><span></span>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Step list rows</span>
+      <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+        <sc-for list="{{ steps }}" as="s">
+          <div style="border-top:{{ s.borderTop }}">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;background:{{ s.bg }}">
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ t.text3 }};width:16px;text-align:right">{{ s.n }}</span>
+              <x-import component="StatusIcon" from="./status-icons.js" status="{{ s.icon }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import>
+              <span style="flex:1;color:{{ s.color }};font-weight:{{ s.weight }}">{{ s.text }}</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ t.text2 }}">{{ s.time }}</span>
+              <span style="width:14px;color:{{ t.text3 }};font-size:9px;text-align:center">{{ s.chev }}</span>
+            </div>
+            <sc-if value="{{ s.hasDetail }}"><div style="padding:0 14px 10px 66px;font-size:12px;color:{{ t.text2 }};background:{{ s.bg }}">{{ s.detail }}</div></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">PR check rows</span>
+      <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.surface }}">
+        <sc-for list="{{ checks }}" as="c">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:{{ c.borderTop }}">
+            <x-import component="StatusIcon" from="./status-icons.js" status="{{ c.icon }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import>
+            <span style="width:150px;flex:none;font-weight:500">{{ c.name }}</span>
+            <span style="flex:1;min-width:0;color:{{ c.color }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.result }}</span>
+            <sc-if value="{{ c.exp }}"><span style="height:22px;line-height:22px;padding:0 8px;border:1px solid {{ t.border }};border-radius:5px;font-size:12px;color:{{ t.text2 }}">{{ c.exp }}</span></sc-if>
+          </div>
+        </sc-for>
+        <div style="padding:0 14px 12px 39px">
+          <div style="font-family:'Geist Mono',monospace;font-size:12px;line-height:1.6;background:{{ t.code }};border:1px solid {{ t.border }};border-radius:6px;padding:8px 12px;white-space:pre;color:{{ t.text2 }}"><div style="color:{{ t.fail }}">  Failed ReminderSchedulerTests.Schedules_once_when_clocks_go_back</div><div style="color:{{ t.fail }}">   Expected reminders.Count to be 1, but found 2.</div><div>   at ReminderSchedulerTests.cs:line 88</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Needs-input panel</span>
+      <div style="border:1px solid {{ t.att }};border-radius:8px;background:{{ t.attBg }};padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:8px"><x-import component="StatusIcon" from="./status-icons.js" status="needs_input" theme="{{ theme }}" size="16" hint-size="16px,16px"></x-import><span style="font-weight:600">Claude has a question</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ t.text2 }};border:1px solid {{ t.border2 }};border-radius:4px;padding:0 6px">Question</span><div style="flex:1"></div><span style="font-size:12px;color:{{ t.text2 }}">Waiting 4m · step 3 of 6</span></div>
+        <div style="line-height:1.5">Should audit entries store the full prescription snapshot, or only the changed fields? Changed-only is smaller but harder to replay.</div>
+        <div style="display:flex;gap:8px"><div style="flex:1;height:32px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:6px;background:{{ t.input }};display:flex;align-items:center;color:{{ t.text }}">Changed fields only, plus the version number</div><button style="height:32px;padding:0 12px;border:0;border-radius:6px;background:{{ t.btn }};color:{{ t.btnText }};font-weight:600">Send reply</button></div>
+      </div>
+      <span style="font-size:12.5px;color:{{ t.text2 }}">Permission requests show the exact command or file in a code block with Approve / Deny; questions get Send reply. Pinned above the scroll area until answered.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Log viewer</span>
+      <div style="border:1px solid {{ t.border }};border-radius:8px;overflow:hidden;background:{{ t.code }};padding:6px 0;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.65">
+        <sc-for list="{{ logs }}" as="l"><div><div style="display:flex;gap:10px;padding:0 12px"><span style="color:{{ t.text3 }}">{{ l.time }}</span><span style="width:10px;color:{{ t.text3 }};font-size:9px">{{ l.chev }}</span><span style="width:44px;color:{{ l.toolColor }};font-weight:500">{{ l.tool }}</span><span style="flex:1;min-width:0;color:{{ t.text2 }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.arg }}</span><span style="color:{{ t.text3 }}">{{ l.sum }}</span></div><sc-if value="{{ l.hasLines }}"><div style="margin:2px 12px 4px 96px;padding-left:10px;border-left:1px solid {{ t.border2 }};color:{{ t.text2 }};white-space:pre"><sc-for list="{{ l.lines }}" as="x"><div>{{ x.l }}</div></sc-for></div></sc-if></div></sc-for>
+      </div>
+      <span style="font-size:12.5px;color:{{ t.text2 }}">Tool calls with output are collapsible groups (▶/▼). Questions and permissions log in the attention colour.</span>
+    </div>
+  </section>
+
+  <section style="display:grid;grid-template-columns:260px minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Selector with search</span>
+      <div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 8px 0 4px;border:1px solid {{ t.border2 }};border-radius:6px;width:max-content"><span style="width:20px;height:20px;border-radius:50%;background:{{ t.sel }};display:grid;place-items:center;font-size:10px;font-weight:600">SS</span><span style="font-weight:500">Me</span><span style="font-size:9px;color:{{ t.text3 }}">▼</span></div>
+      <div style="width:240px;background:{{ t.raised }};border:1px solid {{ t.border2 }};border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:2px">
+        <div style="height:28px;padding:0 8px;margin-bottom:4px;border:1px solid {{ t.run }};border-radius:5px;background:{{ t.input }};display:flex;align-items:center;color:{{ t.text }}">to</div>
+        <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border-radius:5px;background:{{ t.hover }}"><span style="width:12px"></span>Tom Okafor</div>
+        <div style="display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;border-radius:5px;color:{{ t.text3 }}"><span style="width:12px"></span>No other matches</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Toasts (in-app)</span>
+      <sc-for list="{{ toasts }}" as="x"><div style="display:flex;gap:10px;align-items:flex-start;padding:10px 10px 10px 12px;border:1px solid {{ x.border }};border-radius:8px;background:{{ t.raised }};width:340px;box-sizing:border-box"><div style="padding-top:1px"><x-import component="StatusIcon" from="./status-icons.js" status="{{ x.icon }}" theme="{{ theme }}" size="15" hint-size="15px,15px"></x-import></div><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-weight:600">{{ x.title }}</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ x.text }}</span></div><span style="height:26px;line-height:26px;padding:0 10px;border:1px solid {{ t.border2 }};border-radius:5px;font-weight:500">View</span></div></sc-for>
+      <span style="font-size:12.5px;color:{{ t.text2 }}">Bottom-right, stack up to three, auto-dismiss after 6s. Attention toasts take the attention border.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <span style="font-size:16px;font-weight:600">Desktop notification</span>
+      <sc-for list="{{ notifs }}" as="x"><div style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:10px;background:{{ t.notifBg }};border:1px solid {{ t.border2 }};width:360px;box-sizing:border-box"><div style="width:28px;height:28px;border-radius:7px;background:{{ t.btn }};display:grid;place-items:center;flex:none"><div style="width:12px;height:12px;border-radius:3px;border:1.5px solid {{ t.btnText }};display:grid;place-items:center"><div style="width:4px;height:4px;background:{{ t.btnText }}"></div></div></div><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:{{ t.text3 }}">Agent Launcher · now</span><span style="font-weight:600">{{ x.title }}</span><span style="font-size:12.5px;color:{{ t.text2 }}">{{ x.text }}</span></div></div></sc-for>
+      <span style="font-size:12.5px;color:{{ t.text2 }}">Text leads with the status word and item ID so it still reads when the OS strips icons and colour.</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;}}">
+const T = {
+  dark: { bg:'#0e0f11', surface:'#141518', raised:'#1b1d21', hover:'#1e2025', sel:'#272a33', border:'#25272c', border2:'#363940', text:'#e7e8eb', text2:'#a6a9b0', text3:'#8a8e97', run:'#63a4f4', att:'#f0b043', fail:'#f2706a', pass:'#4fc48a', merge:'#a98bf5', runBg:'rgba(99,164,244,0.10)', attBg:'rgba(240,176,67,0.08)', attBg2:'rgba(240,176,67,0.22)', attHover:'rgba(240,176,67,0.13)', failBg:'rgba(242,112,106,0.09)', passBg:'rgba(79,196,138,0.09)', mergeBg:'rgba(169,139,245,0.10)', muteBg:'rgba(255,255,255,0.06)', btn:'#e7e8eb', btnHover:'#ffffff', btnText:'#0e0f11', btn2:'#1f2126', code:'#0b0c0e', input:'#0e0f11', notifBg:'#24262b' },
+  light: { bg:'#f1f2f4', surface:'#ffffff', raised:'#ffffff', hover:'#f2f3f5', sel:'#e3e7ef', border:'#e1e3e7', border2:'#cdd0d6', text:'#16171a', text2:'#4b4f57', text3:'#666a73', run:'#1d6fd6', att:'#9a5c00', fail:'#c9302c', pass:'#1a7f4e', merge:'#7146d6', runBg:'rgba(29,111,214,0.07)', attBg:'rgba(214,140,20,0.10)', attBg2:'rgba(214,140,20,0.26)', attHover:'rgba(214,140,20,0.16)', failBg:'rgba(201,48,44,0.07)', passBg:'rgba(26,127,78,0.08)', mergeBg:'rgba(113,70,214,0.07)', muteBg:'rgba(0,0,0,0.05)', btn:'#16171a', btnHover:'#33353b', btnText:'#ffffff', btn2:'#ffffff', code:'#f7f8f9', input:'#ffffff', notifBg:'#f7f7f8' }
+};
+class Component extends DCLogic {
+  state = { theme: null };
+  renderVals() {
+    const theme = this.state.theme || (this.props.theme === 'light' ? 'light' : 'dark'); const t = T[theme];
+    const bt = i => i ? '1px solid ' + t.border : 'none';
+    const icons = [
+      ['not_started','Not started','Hollow circle — in DevOps, no session yet','Card'],
+      ['queued','Queued','Dashed circle with dot — waiting for a free slot','Card'],
+      ['running','Running','Rotating arc around a dot — Claude is working (only animated icon)','Card, step'],
+      ['needs_input','Needs input','Filled diamond with ! — waiting on a question or permission','Card, step'],
+      ['pending','Pending','Small ring — step or check not reached yet','Step, check'],
+      ['done','Done / passed','Filled circle with tick','Step, check'],
+      ['failed','Failed','Filled square with × — step, build or review failed','Card, step, check'],
+      ['fixing','Fixing','Square outline with rotating arc — fix session running on the PR','Card'],
+      ['pr_checks','PR checks running','Half-filled circle — PR open, CI in progress','Card'],
+      ['ready','Ready to merge','Ring with solid centre (target) — all checks passed','Card'],
+      ['merged','Merged','Filled hexagon with tick','Card'],
+      ['skipped','Skipped / cancelled','Circle with slash','Card, step'],
+      ['stuck','Stuck','Filled triangle with ! — fix limit reached','Card']
+    ].map((r, i) => ({ key: r[0], name: r[1], meaning: r[2], where: r[3], borderTop: bt(i) }));
+    const B = [['not_started','Not started','text3','muteBg'],['queued','Queued','text2','muteBg'],['running','Running','run','runBg'],['needs_input','Needs input','att','attBg'],['pr_checks','PR checks running','run','runBg'],['failed','PR failed','fail','failBg'],['fixing','Fixing','run','runBg'],['ready','Ready to merge','pass','passBg'],['stuck','Stuck','fail','failBg'],['merged','Merged','merge','mergeBg'],['cancelled','Cancelled','text3','muteBg']];
+    const segs = (d, r, n) => Array.from({ length: n }, (_, i) => ({ bg: i < d ? t.text2 : i === d && r ? t.run : t.border2 }));
+    const card = (variant, o) => ({ variant, type: 'task', weight: 450, titleColor: t.text, labelColor: t.text3, labelWeight: 500, bg: 'transparent', outline: 'none', hasProg: false, segs: [], prog: '', reason: '', pr: '', ago: '3m', ...o });
+    const cards = [
+      card('Default · not started', { status: 'not_started', id: 4530, type: 'story', title: 'Look up GP practice details from the ODS API', label: 'Not started', ago: '3h' }),
+      card('Hover', { status: 'not_started', id: 4531, title: 'Rate-limit the public booking endpoint', label: 'Not started', bg: t.hover, ago: '5h' }),
+      card('Running · progress', { status: 'running', id: 4520, title: 'Move PatientService to .NET 9 minimal hosting', label: 'Running', labelColor: t.run, hasProg: true, segs: segs(4, true, 7), prog: '4/7', ago: 'now' }),
+      card('Selected', { status: 'running', id: 4520, title: 'Move PatientService to .NET 9 minimal hosting', label: 'Running', labelColor: t.run, hasProg: true, segs: segs(4, true, 7), prog: '4/7', bg: t.sel, ago: 'now' }),
+      card('Selected · keyboard focus', { status: 'running', id: 4507, type: 'story', title: 'Audit log for prescription edits', label: 'Running', labelColor: t.run, hasProg: true, segs: segs(2, true, 6), prog: '2/6', bg: t.sel, outline: '2px solid ' + t.run, ago: '1m' }),
+      card('Needs attention · needs input', { status: 'needs_input', id: 4512, title: 'Add NHS number validation to patient intake form', label: 'Needs input', labelColor: t.att, labelWeight: 600, weight: 600, bg: t.attBg, reason: 'Asks to run dotnet ef database update', ago: '1m' }),
+      card('Needs attention · state just changed (2.4s, then settles)', { status: 'needs_input', id: 4507, type: 'story', title: 'Audit log for prescription edits', label: 'Needs input', labelColor: t.att, labelWeight: 600, weight: 600, bg: t.attBg2, outline: '1px solid ' + t.att, reason: 'Asks to edit a file outside its area', ago: 'now' }),
+      card('Needs attention · PR failed', { status: 'failed', id: 4498, type: 'bug', title: 'Appointment reminders send twice when clocks change', label: 'PR failed', labelColor: t.fail, labelWeight: 600, weight: 600, bg: t.attBg, reason: '2 tests · 3 comments', pr: '!1287', ago: '4m' }),
+      card('Needs attention · stuck', { status: 'stuck', id: 4471, type: 'story', title: 'Export clinic schedule as an iCal feed', label: 'Stuck', labelColor: t.fail, labelWeight: 600, weight: 600, bg: t.attBg, reason: '3 of 3 fix attempts failed', pr: '!1279', ago: '38m' }),
+      card('Needs attention · ready to merge', { status: 'ready', id: 4460, type: 'story', title: 'Show allergy warnings on the prescription screen', label: 'Ready to merge', labelColor: t.pass, labelWeight: 600, weight: 600, bg: t.attBg, reason: 'All 5 checks passed', pr: '!1281', ago: '12m' }),
+      card('Queued', { status: 'queued', id: 4534, type: 'bug', title: 'Discharge letter shows times in UTC', label: 'Queued', labelColor: t.text2, reason: 'Waiting for a free slot', ago: 'now' }),
+      card('Fixing', { status: 'fixing', id: 4489, type: 'bug', title: 'Referral priority ignores triage rule overrides', label: 'Fixing', labelColor: t.run, reason: 'Fix attempt 2 of 3', pr: '!1284', ago: '2m' }),
+      card('PR checks running', { status: 'pr_checks', id: 4493, title: 'Paginate referral search results', label: 'PR checks running', labelColor: t.run, reason: 'Build running', pr: '!1290', ago: '3m' }),
+      card('Completed · merged', { status: 'merged', id: 4440, title: 'Add audit fields to Appointment entity', label: 'Merged', labelColor: t.merge, titleColor: t.text2, pr: '!1270', ago: '2h' })
+    ];
+    const steps = [['done','Read work item and acceptance criteria','0:18'],['running','Update integration test factory','2:34','7 of 12 test classes updated'],['needs_input','Add migration for nhs_number column','2:11','Waiting for permission to apply migration'],['failed','Run full test suite','1:52','2 tests failed in PatientService.Tests'],['skipped','Draft R5 mapping profile',''],['pending','Commit, push and open PR','']].map((s, i) => ({ n: i + 1, icon: s[0], text: s[1], time: s[2], hasDetail: !!s[3], detail: s[3], chev: s[3] ? '▼' : '', borderTop: bt(i), color: s[0] === 'pending' || s[0] === 'skipped' ? t.text3 : t.text, weight: s[0] === 'running' || s[0] === 'needs_input' ? 600 : 400, bg: s[0] === 'running' ? t.runBg : s[0] === 'needs_input' ? t.attBg : 'transparent' }));
+    const checks = [['passed','Merge conflicts','No conflicts with main',''],['running','Build validation','Running · 3m 12s',''],['pending','Automated review','Starts after the build passes',''],['failed','Build validation','2 tests failed in PatientService.Tests','Hide']].map((c, i) => ({ icon: c[0], name: c[1], result: c[2], exp: c[3], color: c[0] === 'failed' ? t.fail : t.text2, borderTop: bt(i) }));
+    const logs = [['14:21:03','','Read','tests/ApiFactory.cs','92 lines',null],['14:21:40','▼','Bash','dotnet build tests/PatientService.IntegrationTests','4 lines',['Build succeeded.','    0 Warning(s)','    0 Error(s)']],['14:22:02','▶','Bash','dotnet test --filter Category=Api','1 line',null],['14:22:15','','Think','Api tests pass. Checking for remaining Startup references.','',null],['14:32:11','','Ask','Permission: dotnet ef database update','waiting',null]].map(l => ({ time: l[0], chev: l[1], tool: l[2], arg: l[3], sum: l[4], hasLines: !!l[5], lines: (l[5] || []).map(x => ({ l: x })), toolColor: l[2] === 'Ask' ? t.att : l[2] === 'Think' ? t.text3 : t.text }));
+    return {
+      t, theme, themeName: theme === 'light' ? 'light theme' : 'dark theme',
+      themeOpts: ['dark','light'].map(k => ({ label: k === 'dark' ? 'Dark' : 'Light', bg: theme === k ? t.sel : 'transparent', color: theme === k ? t.text : t.text2, pick: () => this.setState({ theme: k }) })),
+      icons, badges: B.map(b => ({ key: b[0], label: b[1], color: t[b[2]], bg: t[b[3]] })), cards, steps, checks, logs,
+      toasts: [{ icon: 'needs_input', title: '4507 needs input', text: 'Claude wants to edit ClinicalDbContext.cs', border: t.att }, { icon: 'merged', title: '!1281 merged', text: 'Show allergy warnings on the prescription screen', border: t.border2 }],
+      notifs: [{ title: 'Needs input · 4512', text: 'Claude wants to run dotnet ef database update' }, { title: 'PR failed · !1287', text: '2 tests failed in PatientService.Tests' }, { title: 'Ready to merge · !1281', text: 'All 5 checks passed' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

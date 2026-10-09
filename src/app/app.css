@@ -1,0 +1,60 @@
+:host { position: relative; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); border-radius: 10px; border: 1px solid var(--border2); }
+
+.titlebar { height: 40px; flex: none; display: flex; align-items: center; gap: 8px; padding-left: 12px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.brand { display: flex; align-items: center; gap: 8px; padding-right: 6px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.logo { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--text); display: grid; place-items: center; }
+.logo div { width: 5px; height: 5px; border-radius: 1px; background: var(--text); }
+.divider { width: 1px; height: 18px; background: var(--border); }
+.avatar { width: 20px; height: 20px; border-radius: 50%; background: var(--sel); display: grid; place-items: center; font-size: 10px; font-weight: 600; flex: none; }
+
+.search { display: flex; align-items: center; gap: 6px; height: 28px; width: 260px; padding: 0 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--input); }
+.search:focus-within { outline: 2px solid var(--run); outline-offset: 1px; }
+.search svg { flex: none; fill: none; stroke: var(--text3); stroke-width: 1.5; stroke-linecap: round; }
+.search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font-size: 12.5px; }
+
+.sync { display: flex; align-items: center; gap: 6px; padding-left: 6px; font-size: 12px; color: var(--text2); white-space: nowrap; }
+.sync.bad { color: var(--fail); }
+.sync button { width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: var(--text2); font-size: 14px; }
+.sync button:hover:not(:disabled) { background: var(--hover); }
+
+.settings { width: 30px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: transparent; display: grid; place-items: center; }
+.settings:hover:not(:disabled) { background: var(--hover); }
+.settings.on { background: var(--sel); border-color: var(--text2); }
+.settings:disabled { opacity: 0.5; }
+.settings svg path { fill: none; stroke: var(--text2); stroke-width: 1.4; stroke-linecap: round; }
+.settings svg circle { fill: var(--surface); stroke: var(--text2); stroke-width: 1.4; }
+
+.winctl { display: flex; margin-left: 6px; }
+.winctl button { width: 40px; height: 40px; border: 0; background: transparent; display: grid; place-items: center; }
+.winctl button:hover { background: var(--hover); }
+.winctl button.close:hover { background: var(--fail-bg); }
+.winctl svg * { fill: none; stroke: var(--text2); stroke-width: 1.2; }
+
+.strip { height: 44px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.chip { display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px 0 8px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text2); }
+.chip:hover { background: var(--hover); }
+.chip .n { font-weight: 500; color: var(--text); }
+.chip.on { background: var(--sel); border-color: var(--text2); }
+.chip.needs { gap: 8px; }
+.chip.needs .lbl { font-weight: 600; }
+.chip.needs .n { font-weight: 600; font-size: 15px; color: inherit; }
+.chip.needs.some { color: var(--att); background: var(--att-bg); border-color: var(--att); }
+.chip.needs.on { outline: 2px solid var(--att); outline-offset: 1px; }
+.hints { display: flex; align-items: center; gap: 12px; font-size: 11.5px; color: var(--text3); }
+.hints > span { display: flex; align-items: center; gap: 5px; }
+@media (max-width: 1100px) { .hints { display: none; } .search { width: 200px; } }
+
+.banner { flex: none; display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: var(--fail-bg); border-bottom: 1px solid var(--border); font-size: 12.5px; flex-wrap: wrap; }
+.banner .what { font-weight: 600; }
+.banner .detail { color: var(--text2); }
+
+.main { flex: 1; min-height: 0; display: flex; }
+
+.toasts { position: absolute; right: 16px; bottom: 16px; z-index: 40; width: 340px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { pointer-events: auto; display: flex; gap: 10px; align-items: flex-start; padding: 10px 10px 10px 12px; border: 1px solid var(--border2); border-radius: 8px; background: var(--raised); }
+.toast.bad { border-color: var(--fail); }
+.toast.att { border-color: var(--att); }
+.toast fm-status-icon { padding-top: 1px; }
+.toast .msg { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.toast .msg b { font-weight: 600; overflow-wrap: anywhere; }
+.toast .msg span { font-size: 12.5px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

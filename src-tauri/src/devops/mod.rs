@@ -368,6 +368,24 @@ impl Client {
         Ok(items)
     }
 
+    /// Assignee and state of the given items, for deciding whether a parent still has open work.
+    pub async fn child_states(&self, ids: &[u64]) -> Result<Vec<model::ChildState>> {
+        if ids.is_empty() {
+            return Ok(vec![]);
+        }
+        let raw = self.batch(ids, json!({ "fields": ["System.AssignedTo", "System.State"] })).await?;
+        Ok(raw
+            .iter()
+            .filter_map(|v| {
+                Some(model::ChildState {
+                    id: v.get("id")?.as_u64()?,
+                    assignee: v.pointer("/fields/System.AssignedTo").and_then(model::parse_person).map(|p| p.unique_name),
+                    state: v.pointer("/fields/System.State").and_then(Value::as_str).unwrap_or_default().to_string(),
+                })
+            })
+            .collect())
+    }
+
     /// Distinct assignees of the given items.
     pub async fn assignees(&self, ids: &[u64]) -> Result<Vec<Person>> {
         let raw = self.batch(ids, json!({ "fields": ["System.AssignedTo"] })).await?;

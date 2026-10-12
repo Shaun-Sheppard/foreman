@@ -67,6 +67,41 @@ pub struct LinkedItem {
     pub state: String,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ChildState {
+    pub id: u64,
+    pub assignee: Option<String>,
+    pub state: String,
+}
+
+const CHILD_LINK: &str = "Child";
+
+impl WorkItem {
+    pub fn child_ids(&self) -> impl Iterator<Item = u64> + '_ {
+        self.links.iter().filter(|l| l.rel == CHILD_LINK).map(|l| l.id)
+    }
+}
+
+/// Drops items whose assignee has finished their part: they have child tasks of their own
+/// on the item and none is still in a to-do state (e.g. their Dev task is In Review). An item
+/// where the assignee has no child task at all is kept, since the work may sit on the item itself.
+pub fn without_finished_parents(items: Vec<WorkItem>, children: &[ChildState], todo_states: &[String]) -> Vec<WorkItem> {
+    items
+        .into_iter()
+        .filter(|item| {
+            let Some(owner) = item.assigned_to.as_ref().map(|p| p.unique_name.to_lowercase()) else {
+                return true;
+            };
+            let mine: Vec<&ChildState> = item
+                .child_ids()
+                .filter_map(|id| children.iter().find(|c| c.id == id))
+                .filter(|c| c.assignee.as_ref().is_some_and(|a| a.to_lowercase() == owner))
+                .collect();
+            mine.is_empty() || mine.iter().any(|c| todo_states.contains(&c.state))
+        })
+        .collect()
+}
+
 fn text(fields: &Value, key: &str) -> String {
     fields.get(key).and_then(Value::as_str).unwrap_or_default().to_string()
 }
@@ -159,6 +194,30 @@ mod tests {
         assert_eq!(item.assigned_to.unwrap().unique_name, "ss@example.com");
         assert_eq!(item.priority, Some(2));
         assert_eq!(item.links, vec![Link { rel: "Parent".into(), id: 4400 }]);
+    }
+
+    #[test]
+    fn parents_are_hidden_once_the_assignees_own_tasks_are_done() {
+        let me = Person { display_name: "Shaun".into(), unique_name: "SS@example.com".into() };
+        let parent = |id: u64, kids: &[u64]| WorkItem {
+            id, rev: 1, kind: "User Story".into(), title: String::new(), state: "New".into(), assigned_to: Some(me.clone()),
+            iteration_path: String::new(), area_path: String::new(), project: String::new(), priority: None,
+            changed_date: String::new(), description_html: String::new(), acceptance_html: String::new(),
+            links: kids.iter().map(|k| Link { rel: "Child".into(), id: *k }).chain([Link { rel: "Related".into(), id: 900 }]).collect(),
+        };
+        let child = |id: u64, who: &str, state: &str| ChildState { id, assignee: Some(who.into()), state: state.into() };
+        let children = [
+            child(10, "ss@example.com", "In Review"), // mine, finished
+            child(11, "jon@example.com", "To Do"),    // someone else's QA task
+            child(20, "ss@example.com", "In Review"),
+            child(21, "ss@example.com", "To Do"),     // I still have work here
+            child(30, "jon@example.com", "To Do"),    // only other people's tasks
+            child(900, "ss@example.com", "Done"),     // related, not a child
+        ];
+        let todo = vec!["New".to_string(), "To Do".to_string(), "In Progress".to_string()];
+        let items = vec![parent(1, &[10, 11]), parent(2, &[20, 21]), parent(3, &[30]), parent(4, &[])];
+        let kept: Vec<u64> = without_finished_parents(items, &children, &todo).iter().map(|i| i.id).collect();
+        assert_eq!(kept, vec![2, 3, 4]);
     }
 
     #[test]

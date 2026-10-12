@@ -165,6 +165,15 @@ const KNOWN_STATES = ['New', 'Approved', 'Committed', 'Active', 'To Do', 'In Pro
               <label class="top">States that count as to do</label>
               <fm-toggle-chips [values]="s.todoStates" [options]="knownStates" (changed)="patch({ todoStates: $event })" />
 
+              <label class="top">Finished items</label>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="line">
+                  <button class="switch" role="switch" [class.on]="s.hideFinishedParents" [attr.aria-checked]="s.hideFinishedParents" aria-label="Hide items whose own tasks are finished" (click)="patch({ hideFinishedParents: !s.hideFinishedParents })"><span></span></button>
+                  <span>Hide an item once the assignee's own tasks on it are finished</span>
+                </div>
+                <span class="hint">For example a story assigned to you whose Dev task is In Review. Items where the assignee has no task of their own stay listed.</span>
+              </div>
+
               <label for="poll">Sync interval</label>
               <div class="line">
                 <input id="poll" class="field mono" style="width:64px" inputmode="numeric" [value]="s.pollIntervalSecs" (change)="setInterval($any($event.target))" />

@@ -77,7 +77,14 @@ async fn fetch(
     }
     let sprint = resolve_sprint(&client, settings, &filters.sprint).await?;
     let ids = query_ids(&client, settings, &sprint, &filters.person).await?;
-    let items = client.work_items(&ids).await?;
+    let mut items = client.work_items(&ids).await?;
+    if settings.hide_finished_parents {
+        let mut child_ids: Vec<u64> = items.iter().flat_map(|i| i.child_ids()).collect();
+        child_ids.sort_unstable();
+        child_ids.dedup();
+        let children = client.child_states(&child_ids).await?;
+        items = crate::devops::model::without_finished_parents(items, &children, &settings.todo_states);
+    }
     Ok((items, sprint.names))
 }
 

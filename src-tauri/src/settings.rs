@@ -102,6 +102,8 @@ pub struct Settings {
     pub work_item_types: Vec<String>,
     pub todo_states: Vec<String>,
     pub poll_interval_secs: u64,
+    /// Hide an item once its assignee's own child tasks have all left the to-do states.
+    pub hide_finished_parents: bool,
     pub repositories: Vec<RepoMapping>,
     pub concurrency_limit: u32,
     /// `implement` or `review`.
@@ -145,6 +147,7 @@ impl Default for Settings {
             work_item_types: s(&["Bug", "Task", "User Story", "Product Backlog Item"]),
             todo_states: s(&["New", "Approved", "Committed", "Active", "To Do", "In Progress", "Doing"]),
             poll_interval_secs: 60,
+            hide_finished_parents: true,
             repositories: vec![],
             concurrency_limit: 3,
             default_mode: "implement".into(),

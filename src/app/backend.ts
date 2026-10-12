@@ -36,6 +36,7 @@ export interface Settings {
   workItemTypes: string[];
   todoStates: string[];
   pollIntervalSecs: number;
+  hideFinishedParents: boolean;
   repositories: RepoMapping[];
   concurrencyLimit: number;
   defaultMode: Mode;

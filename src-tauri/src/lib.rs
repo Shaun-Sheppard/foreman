@@ -141,6 +141,20 @@ async fn list_sprints(state: State<'_, AppState>) -> CmdResult<Vec<Sprint>> {
     Ok(all)
 }
 
+/// Every work item type the configured projects define, so custom types can be watched too.
+#[tauri::command]
+async fn list_work_item_types(state: State<'_, AppState>) -> CmdResult<Vec<String>> {
+    let settings = state.settings();
+    let client = state.client(&settings)?;
+    let mut all: Vec<String> = vec![];
+    for project in &settings.projects {
+        all.extend(client.work_item_types(project).await?);
+    }
+    all.sort();
+    all.dedup();
+    Ok(all)
+}
+
 /// Everyone with an item in the sprint currently shown, for the person filter.
 #[tauri::command]
 async fn list_people(state: State<'_, AppState>) -> CmdResult<Vec<Person>> {
@@ -465,6 +479,7 @@ pub fn run() {
             refresh,
             list_sprints,
             list_people,
+            list_work_item_types,
             get_work_item_detail,
             open_work_item,
             open_url,

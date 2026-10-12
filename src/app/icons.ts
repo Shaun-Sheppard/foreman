@@ -97,7 +97,7 @@ export type TypeGlyph = 'task' | 'bug' | 'story';
 
 export function typeGlyph(workItemType: string): TypeGlyph {
   const t = workItemType.toLowerCase();
-  if (t === 'bug' || t === 'issue') return 'bug';
+  if (t.includes('bug') || t === 'issue' || t === 'impediment') return 'bug';
   if (t === 'task') return 'task';
   return 'story';
 }

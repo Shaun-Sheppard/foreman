@@ -255,6 +255,7 @@ export const backend = {
   setFilters: (filters: Filters) => invoke<Filters>('set_filters', { filters }),
   refresh: () => invoke<void>('refresh'),
   listSprints: () => invoke<Sprint[]>('list_sprints'),
+  listWorkItemTypes: () => invoke<string[]>('list_work_item_types'),
   listPeople: () => invoke<Person[]>('list_people'),
   workItemDetail: (id: number) => invoke<Detail>('get_work_item_detail', { id }),
   openWorkItem: (id: number) => invoke<void>('open_work_item', { id }),

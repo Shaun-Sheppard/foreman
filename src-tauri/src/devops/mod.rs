@@ -341,6 +341,16 @@ impl Client {
             .unwrap_or_default())
     }
 
+    /// Names of the project's work item types, including custom ones.
+    pub async fn work_item_types(&self, project: &str) -> Result<Vec<String>> {
+        let url = self.url(&[project, "_apis", "wit", "workitemtypes"], &[("api-version", API)]);
+        let v = self.send(Method::GET, url, None).await?;
+        Ok(v.get("value")
+            .and_then(Value::as_array)
+            .map(|types| types.iter().filter_map(|t| t.get("name").and_then(Value::as_str).map(str::to_string)).collect())
+            .unwrap_or_default())
+    }
+
     pub async fn query_ids(&self, wiql: &str) -> Result<Vec<u64>> {
         let url = self.url(&["_apis", "wit", "wiql"], &[("api-version", API)]);
         let v = self.send(Method::POST, url, Some(json!({ "query": wiql }))).await?;

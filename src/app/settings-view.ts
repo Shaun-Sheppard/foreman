@@ -160,7 +160,10 @@ const KNOWN_STATES = ['New', 'Approved', 'Committed', 'Active', 'To Do', 'In Pro
               </div>
 
               <label class="top">Work-item types</label>
-              <fm-toggle-chips [values]="s.workItemTypes" [options]="knownTypes" (changed)="patch({ workItemTypes: $event })" />
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <fm-toggle-chips [values]="s.workItemTypes" [options]="typeOptions()" (changed)="patch({ workItemTypes: $event })" />
+                <span class="hint">Every type your projects define is listed, including custom ones. Only ticked types appear in the list.</span>
+              </div>
 
               <label class="top">States that count as to do</label>
               <fm-toggle-chips [values]="s.todoStates" [options]="knownStates" (changed)="patch({ todoStates: $event })" />
@@ -378,7 +381,6 @@ export class SettingsView {
   protected readonly store = inject(Store);
   protected readonly s = this.store.settings;
   protected readonly scopes = PAT_SCOPES;
-  protected readonly knownTypes = KNOWN_TYPES;
   protected readonly knownStates = KNOWN_STATES;
   protected readonly nav = [
     { key: 'connection', label: 'Azure DevOps' },
@@ -403,6 +405,9 @@ export class SettingsView {
   protected readonly conn = signal<{ state: 'idle' | 'testing' | 'ok' | 'error'; text: string }>({ state: 'idle', text: '' });
 
   private readonly pane = viewChild.required<ElementRef<HTMLElement>>('pane');
+  private readonly projectTypes = signal<string[]>([]);
+  /** The project's own types once loaded; a generic set until then. */
+  protected readonly typeOptions = computed(() => (this.projectTypes().length ? this.projectTypes() : KNOWN_TYPES));
   private readonly people = signal<Person[]>([]);
   private readonly sprints = signal<Sprint[]>([]);
 
@@ -460,6 +465,8 @@ export class SettingsView {
     });
     effect(() => {
       if (!this.store.configured()) return;
+      this.s()?.projects;
+      backend.listWorkItemTypes().then((t) => this.projectTypes.set(t), () => undefined);
       backend.listPeople().then((p) => this.people.set(p), () => undefined);
       backend.listSprints().then((sp) => this.sprints.set(sp), () => undefined);
     });

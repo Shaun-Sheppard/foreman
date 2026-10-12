@@ -144,6 +144,9 @@ pub fn respond(url: &Url, body: Option<&Value>) -> Result<Value> {
         }
         return Ok(v);
     }
+    if path.ends_with("/wit/workitemtypes") {
+        return Ok(json!({ "value": [{ "name": "Bug" }, { "name": "Task" }, { "name": "User Story" }, { "name": "Story Bug" }, { "name": "Epic" }] }));
+    }
     if path.ends_with("/wit/workitems/$Task") {
         return Ok(json!({ "id": 4600 }));
     }

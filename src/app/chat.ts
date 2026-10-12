@@ -52,6 +52,11 @@ function clock(iso: string): string {
     .start { flex: 1; min-height: 0; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
     .start .lead { font-size: 14px; font-weight: 600; }
     .start .sub { color: var(--text2); max-width: 640px; text-wrap: pretty; margin-top: -8px; }
+    .newtask { max-width: 760px; display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; border: 1px solid var(--att); border-radius: 8px; background: var(--att-bg); }
+    .newtask > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+    .newtask b { font-weight: 600; }
+    .newtask span { font-size: 12.5px; color: var(--text2); }
+    .tline { display: flex; gap: 8px; }
     .feed { flex: 1; min-height: 0; padding: 18px 24px 8px; display: flex; flex-direction: column; gap: 10px; }
     .feed > * { max-width: 860px; width: 100%; margin: 0 auto; }
     .user { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
@@ -267,6 +272,18 @@ function clock(iso: string): string {
         </div>
       } @else {
         <div class="start scroll">
+          @if (needsTask()) {
+            <div class="newtask">
+              <div>
+                <b>This backlog item has no tasks</b>
+                <span>Create a task for your work on it. It will be assigned to you, in To Do, under #{{ r.item.id }}.</span>
+              </div>
+              <div class="tline">
+                <input #taskTitle class="field" placeholder="Task title, e.g. Dev" (keydown.enter)="createTask(taskTitle)" />
+                <button class="btn primary" [disabled]="creating()" (click)="createTask(taskTitle)">Create task</button>
+              </div>
+            </div>
+          }
           <div class="lead">Start a session on this item</div>
           <div class="sub">Claude gets the work item's details straight away, works in its own copy of the repository, and you can talk to it here as it goes.</div>
           <fm-launcher [item]="r.item" />
@@ -365,6 +382,33 @@ export class Chat {
     if (s?.state === 'queued') return 'Queued';
     return this.live() ? 'Claude is working' : 'Enter to send · Shift+Enter for a new line · paste images';
   });
+
+  /** A backlog item assigned to me with no children at all: offer to create my task on it. */
+  protected readonly needsTask = computed(() => {
+    const item = this.row()?.item;
+    const me = this.store.me()?.uniqueName.toLowerCase();
+    return !!item && item.type === 'Product Backlog Item' && !item.links.some((l) => l.rel === 'Child') &&
+      !!me && item.assignedTo?.uniqueName.toLowerCase() === me;
+  });
+  protected readonly creating = signal(false);
+
+  protected async createTask(input: HTMLInputElement): Promise<void> {
+    const parent = this.row()?.item;
+    const title = input.value.trim();
+    if (!parent || this.creating()) return;
+    if (!title) {
+      input.focus();
+      return;
+    }
+    this.creating.set(true);
+    const id = await this.store.run(() => backend.createChildTask(parent.id, title));
+    this.creating.set(false);
+    if (id === undefined) return;
+    input.value = '';
+    // The new task appears after the sync this triggers; select it so it opens as soon as it does.
+    this.store.select(id);
+    this.store.announceCreated(id, title);
+  }
 
   protected readonly emptyTitle = computed(() => {
     const n = this.store.attention().length;

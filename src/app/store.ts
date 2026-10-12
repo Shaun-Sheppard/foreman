@@ -334,6 +334,12 @@ export class Store {
     setTimeout(() => this.dismiss(toast), 8000);
   }
 
+  announceCreated(id: number, title: string): void {
+    const toast: Toast = { status: 'done', title: `Task ${id} created`, text: title, itemId: null };
+    this.toasts.update((t) => [...t.slice(-2), toast]);
+    setTimeout(() => this.dismiss(toast), 6000);
+  }
+
   dismiss(toast: Toast): void {
     this.toasts.update((t) => t.filter((x) => x !== toast));
   }

@@ -261,6 +261,7 @@ export const backend = {
   openUrl: (url: string) => invoke<void>('open_url', { url }),
   inspectRepo: (path: string) => invoke<RepoInfo>('inspect_repo', { path }),
   pickFolder: () => invoke<string | null>('pick_folder'),
+  createChildTask: (parentId: number, title: string) => invoke<number>('create_child_task', { parentId, title }),
   previewPrompt: (workItemId: number, mode: Mode, repoPath: string, baseBranch: string) =>
     invoke<string>('preview_prompt', { workItemId, mode, repoPath, baseBranch }),
   startSession: (request: StartRequest) => invoke<void>('start_session', { request }),

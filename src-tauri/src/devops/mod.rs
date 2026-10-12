@@ -95,7 +95,12 @@ impl Client {
             .basic_auth("", Some(&self.pat))
             .header(header::ACCEPT, "application/json");
         if let Some(body) = body {
+            // Work item writes are JSON Patch documents (an array) and need their own content type.
+            let patch = body.is_array();
             req = req.json(&body);
+            if patch {
+                req = req.header(header::CONTENT_TYPE, "application/json-patch+json");
+            }
         }
         let resp = req.send().await.map_err(|e| {
             let what = if e.is_timeout() {
@@ -366,6 +371,25 @@ impl Client {
         let mut items: Vec<WorkItem> = raw.iter().filter_map(model::parse_work_item).collect();
         items.sort_by_key(|i| ids.iter().position(|id| *id == i.id).unwrap_or(usize::MAX));
         Ok(items)
+    }
+
+    /// Creates a Task under `parent`, in the parent's area and iteration, assigned to `assignee`.
+    /// The state is left to the process, which starts new tasks in its first to-do state.
+    pub async fn create_child_task(&self, parent: &WorkItem, title: &str, assignee: &str) -> Result<u64> {
+        let url = self.url(&[&parent.project, "_apis", "wit", "workitems", "$Task"], &[("api-version", API)]);
+        let parent_url = self.url(&["_apis", "wit", "workItems", &parent.id.to_string()], &[]);
+        let add = |path: &str, value: Value| json!({ "op": "add", "path": path, "value": value });
+        let body = json!([
+            add("/fields/System.Title", json!(title)),
+            add("/fields/System.AssignedTo", json!(assignee)),
+            add("/fields/System.AreaPath", json!(parent.area_path)),
+            add("/fields/System.IterationPath", json!(parent.iteration_path)),
+            add("/relations/-", json!({ "rel": "System.LinkTypes.Hierarchy-Reverse", "url": parent_url.as_str().trim_end_matches('?') })),
+        ]);
+        let v = self.send(Method::POST, url, Some(body)).await?;
+        v.get("id")
+            .and_then(Value::as_u64)
+            .ok_or_else(|| DevOpsError::new(ErrorKind::Server, "Azure DevOps didn't return the new task's ID"))
     }
 
     /// Assignee and state of the given items, for deciding whether a parent still has open work.

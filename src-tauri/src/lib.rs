@@ -207,6 +207,25 @@ fn listed_item(state: &AppState, id: u64) -> CmdResult<WorkItem> {
         .ok_or_else(|| invalid("That work item is no longer in the list"))
 }
 
+/// Creates a child Task on a backlog item that has none, assigned to the item's assignee.
+/// Returns the new task's ID.
+#[tauri::command]
+async fn create_child_task(state: State<'_, AppState>, parent_id: u64, title: String) -> CmdResult<u64> {
+    let parent = listed_item(&state, parent_id)?;
+    let title = title.trim();
+    if title.is_empty() {
+        return Err(invalid("Enter a title for the task"));
+    }
+    if parent.child_ids().next().is_some() {
+        return Err(invalid("This item already has child items"));
+    }
+    let assignee = parent.assigned_to.as_ref().map(|p| p.unique_name.clone()).ok_or_else(|| invalid("This item isn't assigned to anyone"))?;
+    let client = state.client(&state.settings())?;
+    let id = client.create_child_task(&parent, title, &assignee).await?;
+    state.refresh.notify_one();
+    Ok(id)
+}
+
 /// Template for the mode plus the work item's content. Linked items and comments are best-effort.
 async fn build_prompt(state: &AppState, item: &WorkItem, mode: &str, repo_path: &str, base_branch: &str) -> String {
     let settings = state.settings();
@@ -451,6 +470,7 @@ pub fn run() {
             open_url,
             inspect_repo,
             preview_prompt,
+            create_child_task,
             start_session,
             stop_session,
             send_message,

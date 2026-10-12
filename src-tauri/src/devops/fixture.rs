@@ -144,6 +144,9 @@ pub fn respond(url: &Url, body: Option<&Value>) -> Result<Value> {
         }
         return Ok(v);
     }
+    if path.ends_with("/wit/workitems/$Task") {
+        return Ok(json!({ "id": 4600 }));
+    }
     if let Some(v) = fixture_pr_api(url, body) {
         return Ok(v);
     }
